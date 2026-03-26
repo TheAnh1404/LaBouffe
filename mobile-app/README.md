@@ -1,11 +1,11 @@
-# 🍔 ByteFood – Food Ordering Mobile App
+# 🍽️ LaBouffe – Food Ordering Mobile App
 
 ## 📌 Introduction
 
-**ByteFood** is a modern mobile application for food ordering, designed to provide a fast, intuitive, and seamless user experience.
-The app allows users to browse food, view details, and place orders efficiently with a clean and user-friendly interface.
+**LaBouffe** is a modern mobile food ordering application designed to deliver a seamless and intuitive user experience.
+The app enables users to explore a variety of dishes, view detailed information, and place orders efficiently through a clean and responsive interface.
 
-This project is developed as part of a university coursework, focusing on real-world mobile app development using modern technologies.
+This project is developed as part of a university coursework, with a strong focus on real-world mobile development practices and UI/UX implementation.
 
 ---
 
@@ -13,24 +13,24 @@ This project is developed as part of a university coursework, focusing on real-w
 
 * 📱 **Onboarding Experience**
 
-  * Smooth introduction screens with swipe interaction
+  * Smooth swipe-based introduction screens
   * Splash screen with branding
 
 * 🏠 **Home Screen**
 
-  * Food listing with categories
-  * Clean and responsive UI
+  * Browse food items and categories
+  * Clean and modern UI
 
 * 🍔 **Food Details**
 
   * View detailed information of each dish
-  * Pricing, description, and ratings
+  * Includes price, description, and ratings
 
 * 🛒 **Cart System**
 
   * Add/remove items
-  * Manage quantities
-  * View total price
+  * Update quantities
+  * View total cost
 
 * 👤 **User Profile**
 
@@ -44,12 +44,12 @@ This project is developed as part of a university coursework, focusing on real-w
 
 * ⚛️ React Native (Expo)
 * 🚏 Expo Router (File-based navigation)
-* 🎨 Custom UI based on Figma design
+* 🎨 UI implemented from Figma design
 
 ### Backend (Planned)
 
 * 🟢 Node.js + Express
-* 🔥 Firebase / MongoDB (for data storage)
+* 🔥 Firebase / MongoDB
 
 ---
 
@@ -57,7 +57,7 @@ This project is developed as part of a university coursework, focusing on real-w
 
 ```bash
 app/
- ├── index.tsx          # Entry (redirect to splash)
+ ├── index.tsx          # Entry point (redirect to splash)
  ├── splash.tsx         # Splash screen
  ├── onboarding.tsx     # Onboarding screens
  │
@@ -80,23 +80,23 @@ assets/
 
 ## 🧠 Development Approach
 
-This project follows a **UI-first development approach**:
+This project follows a **UI-first development strategy**:
 
 1. Design UI from Figma
-2. Implement frontend with mock data
-3. Define API structure based on UI
-4. Build backend services
+2. Build frontend using mock data
+3. Define API structure based on UI requirements
+4. Develop backend services
 5. Integrate frontend with backend
 
 ---
 
 ## 📸 UI Design
 
-The UI is based on a modern food delivery design from Figma, focusing on:
+The UI is inspired by modern food delivery applications, focusing on:
 
-* Minimalism
-* Accessibility
-* Smooth user experience
+* Simplicity and clarity
+* User-friendly navigation
+* Smooth mobile experience
 
 ---
 
@@ -114,19 +114,19 @@ npm install
 npx expo start
 ```
 
-### 3. Open on web or mobile
+### 3. Open the app
 
 * Web: press `w`
-* Mobile: scan QR with Expo Go
+* Mobile: scan QR using Expo Go
 
 ---
 
 ## 🎯 Future Improvements
 
-* 🔐 Authentication system
+* 🔐 User authentication
 * 💳 Online payment integration
 * 📍 Real-time order tracking
-* 🤖 Recommendation system (AI-based)
+* 🤖 AI-based recommendation system
 
 ---
 
@@ -138,4 +138,4 @@ npx expo start
 
 ## 📄 License
 
-This project is for educational purposes.
+This project is developed for educational purposes.
