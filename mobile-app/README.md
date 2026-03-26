@@ -1,55 +1,62 @@
-# 🍽️ LaBouffe – Food Ordering Mobile App
+<h1 align="center">🍽️ LaBouffe</h1>
+
+<p align="center">
+  <strong>A Modern Food Ordering Mobile App</strong>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React Native Badge" />
+  <img src="https://img.shields.io/badge/Expo-1B1F23?style=for-the-badge&logo=expo&logoColor=white" alt="Expo Badge" />
+  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript Badge" />
+</p>
 
 ## 📌 Introduction
 
-**LaBouffe** is a modern mobile food ordering application designed to deliver a seamless and intuitive user experience.
-The app enables users to explore a variety of dishes, view detailed information, and place orders efficiently through a clean and responsive interface.
+**LaBouffe** is a modern and intuitive mobile food ordering application designed to deliver a seamless user experience. The app empowers users to explore a diverse variety of dishes, view detailed culinary information, and place orders effortlessly through a clean and responsive interface.
 
-This project is developed as part of a university coursework, with a strong focus on real-world mobile development practices and UI/UX implementation.
+Developed as part of a university coursework, this project places a strong emphasis on real-world mobile development practices, robust architecture, and exceptional UI/UX implementation.
 
 ---
 
 ## 🚀 Features
 
-* 📱 **Onboarding Experience**
+### 📱 Onboarding Experience
+* **Smooth Transitions**: Engaging swipe-based introduction screens to introduce the app.
+* **Branded Splash Screen**: A professional initial loading screen.
 
-  * Smooth swipe-based introduction screens
-  * Splash screen with branding
+### 🏠 Home Screen
+* **Interactive Browsing**: Effortlessly browse food items across various categories.
+* **Modern Interface**: Designed with a clean and visually appealing UI.
 
-* 🏠 **Home Screen**
+### 🍔 Food Details
+* **Comprehensive Information**: View essential details for each dish.
+* **Rich Content**: Includes pricing, mouth-watering descriptions, and user ratings.
 
-  * Browse food items and categories
-  * Clean and modern UI
+### 🛒 Cart System
+* **Dynamic Management**: Easily add or remove items from your cart.
+* **Real-time Updates**: Effortlessly update quantities and instantly view total costs.
 
-* 🍔 **Food Details**
+### 👤 User Profile
+* **Personalized Experience**: Manage basic user information and preferences.
 
-  * View detailed information of each dish
-  * Includes price, description, and ratings
+---
 
-* 🛒 **Cart System**
+## 📸 Screenshots
 
-  * Add/remove items
-  * Update quantities
-  * View total cost
-
-* 👤 **User Profile**
-
-  * Basic user information management
+*(Coming Soon - Add app screenshots or GIFs here)*
 
 ---
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-
-* ⚛️ React Native (Expo)
-* 🚏 Expo Router (File-based navigation)
-* 🎨 UI implemented from Figma design
+* **[React Native (Expo)](https://expo.dev/)** – Framework for building native apps using React.
+* **[Expo Router](https://docs.expo.dev/router/introduction/)** – File-based routing for React Native.
+* **Figma** – UI/UX design and prototyping.
 
 ### Backend (Planned)
-
-* 🟢 Node.js + Express
-* 🔥 Firebase / MongoDB
+* **[Node.js](https://nodejs.org/) & [Express](https://expressjs.com/)** – High-performance server environment.
+* **[Firebase](https://firebase.google.com/) / [MongoDB](https://mongodb.com/)** – Flexible, scalable database solutions.
 
 ---
 
@@ -57,7 +64,7 @@ This project is developed as part of a university coursework, with a strong focu
 
 ```bash
 app/
- ├── index.tsx          # Entry point (redirect to splash)
+ ├── index.tsx          # Entry point (redirects to splash)
  ├── splash.tsx         # Splash screen
  ├── onboarding.tsx     # Onboarding screens
  │
@@ -68,39 +75,40 @@ app/
       └── _layout.tsx   # Tab navigation
 
 components/
- ├── FoodCard.tsx
- ├── Header.tsx
- └── Button.tsx
+ ├── FoodCard.tsx       # Reusable food item component
+ ├── Header.tsx         # Reusable screen header
+ └── Button.tsx         # Custom styled button
 
 assets/
- └── images/
+ └── images/            # Static image assets
 ```
 
 ---
 
 ## 🧠 Development Approach
 
-This project follows a **UI-first development strategy**:
+This project strictly adheres to a **UI-First Development Strategy**:
 
-1. Design UI from Figma
-2. Build frontend using mock data
-3. Define API structure based on UI requirements
-4. Develop backend services
-5. Integrate frontend with backend
+1. **Design UI**: Prototype the complete user interface using Figma.
+2. **Frontend Mockup**: Build the frontend components utilizing mock data to validate the design.
+3. **API Definition**: Define a structured API scheme specifically tailored to UI requirements.
+4. **Backend Services**: Develop scalable backend services and endpoints.
+5. **Full Integration**: Connect the frontend mobile app with the live backend.
 
 ---
 
-## 📸 UI Design
+## 🎨 UI Design Philosophy
 
-The UI is inspired by modern food delivery applications, focusing on:
-
-* Simplicity and clarity
-* User-friendly navigation
-* Smooth mobile experience
+The UI draws inspiration from industry-leading food delivery applications, optimizing for:
+* **Simplicity and Clarity**: Minimizing cognitive load.
+* **User-friendly Navigation**: Making desired actions accessible within minimal taps.
+* **Fluid Performance**: Ensuring a smooth, native-feeling mobile experience.
 
 ---
 
 ## ▶️ Getting Started
+
+Follow these instructions to run the project locally.
 
 ### 1. Install dependencies
 
@@ -108,34 +116,37 @@ The UI is inspired by modern food delivery applications, focusing on:
 npm install
 ```
 
-### 2. Run the app
+### 2. Run the application
 
 ```bash
 npx expo start
 ```
 
-### 3. Open the app
+### 3. Open the application
 
-* Web: press `w`
-* Mobile: scan QR using Expo Go
+* **Web**: Press `w` in your terminal.
+* **Mobile**: Scan the QR code generated in the terminal using the **Expo Go** app (available on iOS and Android).
 
 ---
 
 ## 🎯 Future Improvements
 
-* 🔐 User authentication
-* 💳 Online payment integration
-* 📍 Real-time order tracking
-* 🤖 AI-based recommendation system
+- [ ] **🔐 User Authentication**: Secure login and registration.
+- [ ] **💳 Payment Integration**: Online payment gateways for seamless checkout.
+- [ ] **📍 Order Tracking**: Real-time GPS tracking for food delivery.
+- [ ] **🤖 Recommendation System**: AI-driven personalized food recommendations based on user history.
 
 ---
 
 ## 👨‍💻 Author
 
-* **Nguyễn Thế Anh**
+**Nguyễn Thế Anh**
 
 ---
 
 ## 📄 License
 
-This project is developed for educational purposes.
+This project is developed for **educational purposes**.
+
+---
+<p align="center">Made with ❤️ for food lovers</p>
