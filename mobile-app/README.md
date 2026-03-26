@@ -1,50 +1,141 @@
-# Welcome to your Expo app 👋
+# 🍔 ByteFood – Food Ordering Mobile App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## 📌 Introduction
 
-## Get started
+**ByteFood** is a modern mobile application for food ordering, designed to provide a fast, intuitive, and seamless user experience.
+The app allows users to browse food, view details, and place orders efficiently with a clean and user-friendly interface.
 
-1. Install dependencies
+This project is developed as part of a university coursework, focusing on real-world mobile app development using modern technologies.
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+## 🚀 Features
 
-   ```bash
-   npx expo start
-   ```
+* 📱 **Onboarding Experience**
 
-In the output, you'll find options to open the app in a
+  * Smooth introduction screens with swipe interaction
+  * Splash screen with branding
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+* 🏠 **Home Screen**
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+  * Food listing with categories
+  * Clean and responsive UI
 
-## Get a fresh project
+* 🍔 **Food Details**
 
-When you're ready, run:
+  * View detailed information of each dish
+  * Pricing, description, and ratings
+
+* 🛒 **Cart System**
+
+  * Add/remove items
+  * Manage quantities
+  * View total price
+
+* 👤 **User Profile**
+
+  * Basic user information management
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+
+* ⚛️ React Native (Expo)
+* 🚏 Expo Router (File-based navigation)
+* 🎨 Custom UI based on Figma design
+
+### Backend (Planned)
+
+* 🟢 Node.js + Express
+* 🔥 Firebase / MongoDB (for data storage)
+
+---
+
+## 📂 Project Structure
 
 ```bash
-npm run reset-project
+app/
+ ├── index.tsx          # Entry (redirect to splash)
+ ├── splash.tsx         # Splash screen
+ ├── onboarding.tsx     # Onboarding screens
+ │
+ └── (tabs)/
+      ├── index.tsx     # Home screen
+      ├── cart.tsx      # Cart screen
+      ├── profile.tsx   # User profile
+      └── _layout.tsx   # Tab navigation
+
+components/
+ ├── FoodCard.tsx
+ ├── Header.tsx
+ └── Button.tsx
+
+assets/
+ └── images/
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-## Learn more
+## 🧠 Development Approach
 
-To learn more about developing your project with Expo, look at the following resources:
+This project follows a **UI-first development approach**:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+1. Design UI from Figma
+2. Implement frontend with mock data
+3. Define API structure based on UI
+4. Build backend services
+5. Integrate frontend with backend
 
-## Join the community
+---
 
-Join our community of developers creating universal apps.
+## 📸 UI Design
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+The UI is based on a modern food delivery design from Figma, focusing on:
+
+* Minimalism
+* Accessibility
+* Smooth user experience
+
+---
+
+## ▶️ Getting Started
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Run the app
+
+```bash
+npx expo start
+```
+
+### 3. Open on web or mobile
+
+* Web: press `w`
+* Mobile: scan QR with Expo Go
+
+---
+
+## 🎯 Future Improvements
+
+* 🔐 Authentication system
+* 💳 Online payment integration
+* 📍 Real-time order tracking
+* 🤖 Recommendation system (AI-based)
+
+---
+
+## 👨‍💻 Author
+
+* **Nguyễn Thế Anh**
+
+---
+
+## 📄 License
+
+This project is for educational purposes.
