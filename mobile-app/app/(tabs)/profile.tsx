@@ -1,0 +1,191 @@
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  SafeAreaView,
+  ScrollView,
+} from "react-native";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { router } from "expo-router";
+
+const COLORS = {
+  primary: "#FF6332",
+  textMain: "#333333",
+  textSecondary: "#888888",
+  bg: "#FFFFFF",
+};
+
+export default function Profile() {
+  const menuItems = [
+    { id: 1, name: "Wallet", icon: "wallet-outline", library: Ionicons },
+    { id: 2, name: "Order", icon: "format-list-bulleted", library: MaterialCommunityIcons },
+    { id: 3, name: "Favourite", icon: "bookmark-outline", library: Ionicons },
+    { id: 4, name: "Track", icon: "file-clock-outline", library: MaterialCommunityIcons },
+    { id: 5, name: "Get Help", icon: "help-circle-outline", library: MaterialCommunityIcons },
+    { id: 6, name: "About", icon: "information-outline", library: MaterialCommunityIcons },
+  ];
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        
+        {/* --- NEW HEADER SECTION --- */}
+        <View style={styles.headerContainer}>
+          {/* Hàng 1: Các nút chức năng điều hướng */}
+          <View style={styles.navRow}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+              <Ionicons name="chevron-back" size={30} color="#000" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity>
+              <Ionicons name="settings-outline" size={24} color="#666" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Hàng 2: Tiêu đề lớn Profile đẩy xuống dưới */}
+          <View style={styles.titleRow}>
+            <Text style={styles.largeTitle}>Profile</Text>
+            <MaterialCommunityIcons 
+              name="account" 
+              size={32} 
+              color={COLORS.primary} 
+              style={{ marginLeft: 8, marginTop: 6 }} 
+            />
+          </View>
+        </View>
+
+        {/* User Info Section */}
+        <View style={styles.userInfoSection}>
+          <View style={styles.avatarContainer}>
+            <Image
+              source={require("../../assets/images/user_avatar.jpg")} 
+              style={styles.avatar}
+            />
+            <TouchableOpacity style={styles.editIconContainer}>
+              <MaterialCommunityIcons name="pencil-box-outline" size={18} color="#FFF" />
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.userName}>Nguyen The Anh</Text>
+          <Text style={styles.userPhone}>+849029132521</Text>
+        </View>
+
+        {/* Grid Menu */}
+        <View style={styles.gridContainer}>
+          {menuItems.map((item) => {
+            const IconLib = item.library;
+            return (
+              <TouchableOpacity key={item.id} style={styles.gridItem} activeOpacity={0.8}>
+                <IconLib name={item.icon as any} size={48} color="#FFF" />
+                <Text style={styles.gridText}>{item.name}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        
+        <View style={{height: 100}} />
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.bg,
+  },
+  headerContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+  },
+  navRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    height: 44,
+  },
+  backBtn: {
+    marginLeft: -10, // Giúp icon căn lề sát bên trái hơn
+    padding: 10,
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 15,
+  },
+  largeTitle: {
+    fontSize: 34,
+    fontWeight: "900",
+    color: COLORS.textMain,
+    letterSpacing: -0.5,
+  },
+  userInfoSection: {
+    alignItems: "center",
+    marginTop: 25,
+    marginBottom: 35,
+  },
+  avatarContainer: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    padding: 4, 
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  avatar: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 70,
+  },
+  editIconContainer: {
+    position: "absolute",
+    bottom: 5,
+    right: 5,
+    backgroundColor: COLORS.primary,
+    padding: 5,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: "#FFF",
+  },
+  userName: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#333",
+  },
+  userPhone: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginTop: 5,
+  },
+  gridContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    paddingHorizontal: 25,
+  },
+  gridItem: {
+    width: "46%", 
+    aspectRatio: 1, 
+    backgroundColor: COLORS.primary,
+    borderRadius: 22, 
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+    elevation: 8,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+  },
+  gridText: {
+    color: "#FFF",
+    fontSize: 18,
+    fontWeight: "700",
+    marginTop: 12,
+  },
+});
