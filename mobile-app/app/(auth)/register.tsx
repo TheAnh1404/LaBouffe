@@ -7,13 +7,64 @@ import {
   StyleSheet,
   SafeAreaView,
   ScrollView,
+  Alert,
+  ActivityIndicator
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { auth } from "../../config/firebase";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
 export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [agree, setAgree] = useState(true);
+  
+  // States for Firebase Auth
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleRegister = async () => {
+    if (!firstName || !lastName || !email || !password) {
+      Alert.alert("Missing Information", "Please fill in all required fields.");
+      return;
+    }
+
+    if (!agree) {
+      Alert.alert("Terms", "You must agree to receive offers and discounts (or terms) to continue.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // Cập nhật tên người dùng
+      await updateProfile(userCredential.user, {
+        displayName: `${firstName} ${lastName}`.trim()
+      });
+
+      Alert.alert(
+        "Success", 
+        "Account created successfully!",
+        [{ text: "OK", onPress: () => router.replace("/(tabs)") }]
+      );
+    } catch (error: any) {
+      let errorMessage = "An error occurred during registration. Please try again.";
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = "That email address is already in use!";
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = "That email address is invalid!";
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = "The password is too weak. Please use at least 6 characters.";
+      }
+      Alert.alert("Registration Failed", errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -40,22 +91,49 @@ export default function Register() {
         <View style={styles.form}>
           <View style={styles.inputContainer}>
             <Feather name="user" size={20} color="#FF7A50" style={styles.inputIcon} />
-            <TextInput placeholder="First name" style={styles.input} placeholderTextColor="#AFAFAF" />
+            <TextInput 
+              placeholder="First name" 
+              style={styles.input} 
+              placeholderTextColor="#AFAFAF" 
+              value={firstName}
+              onChangeText={setFirstName}
+            />
           </View>
 
           <View style={styles.inputContainer}>
             <Feather name="user" size={20} color="#FF7A50" style={styles.inputIcon} />
-            <TextInput placeholder="Last name" style={styles.input} placeholderTextColor="#AFAFAF" />
+            <TextInput 
+              placeholder="Last name" 
+              style={styles.input} 
+              placeholderTextColor="#AFAFAF" 
+              value={lastName}
+              onChangeText={setLastName}
+            />
           </View>
 
           <View style={styles.inputContainer}>
             <Feather name="phone" size={20} color="#FF7A50" style={styles.inputIcon} />
-            <TextInput placeholder="Phone number" style={styles.input} keyboardType="phone-pad" placeholderTextColor="#AFAFAF" />
+            <TextInput 
+              placeholder="Phone number" 
+              style={styles.input} 
+              keyboardType="phone-pad" 
+              placeholderTextColor="#AFAFAF" 
+              value={phone}
+              onChangeText={setPhone}
+            />
           </View>
 
           <View style={styles.inputContainer}>
             <MaterialCommunityIcons name="email-outline" size={20} color="#FF7A50" style={styles.inputIcon} />
-            <TextInput placeholder="Email" style={styles.input} keyboardType="email-address" placeholderTextColor="#AFAFAF" />
+            <TextInput 
+              placeholder="Email" 
+              style={styles.input} 
+              keyboardType="email-address" 
+              autoCapitalize="none"
+              placeholderTextColor="#AFAFAF" 
+              value={email}
+              onChangeText={setEmail}
+            />
           </View>
 
           <View style={styles.inputContainer}>
@@ -65,6 +143,8 @@ export default function Register() {
               style={styles.input} 
               secureTextEntry={!showPassword} 
               placeholderTextColor="#AFAFAF"
+              value={password}
+              onChangeText={setPassword}
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
               <Text style={styles.showText}>{showPassword ? "Hide" : "Show"}</Text>
@@ -82,8 +162,16 @@ export default function Register() {
           </TouchableOpacity>
 
           {/* SUBMIT BUTTON */}
-          <TouchableOpacity style={styles.submitButton}>
-            <Text style={styles.submitButtonText}>Create account</Text>
+          <TouchableOpacity 
+            style={[styles.submitButton, loading && { opacity: 0.7 }]}
+            onPress={handleRegister}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFF" />
+            ) : (
+              <Text style={styles.submitButtonText}>Create account</Text>
+            )}
           </TouchableOpacity>
 
           {/* FOOTER TEXT */}

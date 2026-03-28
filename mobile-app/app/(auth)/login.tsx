@@ -7,14 +7,47 @@ import {
   StyleSheet,
   SafeAreaView,
   Dimensions,
+  Alert,
+  ActivityIndicator
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons, Feather, FontAwesome, AntDesign } from "@expo/vector-icons";
+import { auth } from "../../config/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 const { width } = Dimensions.get("window");
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Missing Information", "Please enter both email and password.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      // Chuyển hướng vào app chính
+      router.replace("/(tabs)");
+    } catch (error: any) {
+      let errorMessage = "An error occurred during login. Please try again.";
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        errorMessage = "Invalid email or password!";
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = "That email address is invalid!";
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = "Too many attempts. Please try again later.";
+      }
+      Alert.alert("Login Failed", errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -37,12 +70,15 @@ export default function Login() {
       {/* FORM SECTION */}
       <View style={styles.form}>
         <View style={styles.inputContainer}>
-          <Feather name="phone" size={20} color="#FF7A50" style={styles.inputIcon} />
+          <Feather name="mail" size={20} color="#FF7A50" style={styles.inputIcon} />
           <TextInput 
-            placeholder="Phone number" 
+            placeholder="Email" 
             style={styles.input} 
-            keyboardType="phone-pad"
+            keyboardType="email-address"
+            autoCapitalize="none"
             placeholderTextColor="#AFAFAF" 
+            value={email}
+            onChangeText={setEmail}
           />
         </View>
 
@@ -53,6 +89,8 @@ export default function Login() {
             style={styles.input}
             secureTextEntry={!showPassword}
             placeholderTextColor="#AFAFAF"
+            value={password}
+            onChangeText={setPassword}
           />
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
             <Text style={styles.showText}>{showPassword ? "Hide" : "Show"}</Text>
@@ -61,10 +99,15 @@ export default function Login() {
 
         {/* LOG IN BUTTON */}
         <TouchableOpacity 
-          style={styles.loginButton}
-          onPress={() => router.replace("/(tabs)")} // Chuyển hướng vào app chính
+          style={[styles.loginButton, loading && { opacity: 0.7 }]}
+          onPress={handleLogin} 
+          disabled={loading}
         >
-          <Text style={styles.loginButtonText}>Log in</Text>
+          {loading ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <Text style={styles.loginButtonText}>Log in</Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.forgotButton}>

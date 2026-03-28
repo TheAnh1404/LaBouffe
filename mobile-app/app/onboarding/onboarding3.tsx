@@ -32,7 +32,7 @@ export default function Onboarding2() {
       {/* Bottom Action - Nút Skip điều hướng sang trang 3 */}
       <TouchableOpacity
         style={styles.skipButton}
-        onPress={() => router.push('/(tabs)')}
+        onPress={() => router.push('/(tabs)/home')}
         activeOpacity={0.7}
       >
         <View style={styles.dot} />
