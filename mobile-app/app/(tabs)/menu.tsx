@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,115 +8,121 @@ import {
   TouchableOpacity,
   Image,
   SafeAreaView,
+  ActivityIndicator,
+  ToastAndroid,
+  Platform,
+  Alert
 } from "react-native";
 import { Ionicons, Feather } from "@expo/vector-icons";
-
-const foods = [
-  {
-    name: "White Rice",
-    desc: "Basmati rice with Vegetable",
-    price: "AED 45",
-    rating: "4.5",
-    image: require("../../assets/images/rice1.png"), // Nên dùng ảnh local để có shadow đẹp như hình
-  },
-  {
-    name: "Biryani",
-    desc: "Chicken Biryani India",
-    price: "AED 45",
-    rating: "3.5",
-    image: require("../../assets/images/biryani.png"),
-  },
-  {
-    name: "White Rice",
-    desc: "Vegetable Salad, Thai Cuisine",
-    price: "AED 35.9",
-    rating: "4.5",
-    image: require("../../assets/images/salad.png"),
-  },
-  {
-    name: "Jollof Rice",
-    desc: "Nigerian Jollof Rice",
-    price: "AED 45.9",
-    rating: "4.5",
-    image: require("../../assets/images/jollof.png"),
-  },
-  {
-    name: "Rice And Plantain",
-    desc: "Fried Rice With Plantain",
-    price: "AED 65.9",
-    rating: "5.5",
-    image: require("../../assets/images/plantain.png"),
-  },
-];
+import { useFirestoreCollection } from "../../hooks/useFirestoreData";
+import { useCart } from "../../context/CartContext";
 
 export default function Menu() {
+  const { data: categories, loading: catLoading } = useFirestoreCollection<any>("categories");
+  const { data: foods, loading: foodLoading } = useFirestoreCollection<any>("foods");
+  
+  const [activeTab, setActiveTab] = useState<string>("All");
+  const { addToCart } = useCart();
+
+  const isLoading = catLoading || foodLoading;
+
+  // Add "All" to categories list at runtime for the UI
+  const tabs = [{ id: "all", name: "All", iconUrl: "" }, ...categories];
+  
+  // Filter foods
+  const filteredFoods = activeTab === "All" 
+    ? foods 
+    : foods.filter(f => categories.find((c: any) => c.name === activeTab)?.id === f.categoryId);
+
+  const handleAddToCart = (item: any) => {
+    addToCart({
+      id: item.id,
+      name: item.name,
+      desc: item.desc,
+      price: item.price,
+      imageUrl: item.imageUrl
+    });
+    if (Platform.OS === 'android') {
+      ToastAndroid.show(`${item.name} added to cart!`, ToastAndroid.SHORT);
+    } else {
+      Alert.alert("Success", `${item.name} added to cart!`);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         {/* Title */}
         <Text style={styles.menuTitle}>Menu</Text>
 
-        {/* Category Tabs */}
-        <View style={styles.tabContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {["Dishes", "Pizza", "Burger", "Drinks", "Dessert"].map((item, i) => (
-              <TouchableOpacity
-                key={i}
-                style={[styles.tab, i === 0 && styles.activeTab]}
-              >
-                <Text style={[styles.tabText, i === 0 && styles.activeTabText]}>
-                  {item}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Search Bar */}
-        <View style={styles.searchSection}>
-          <View style={styles.searchBox}>
-            <Feather name="search" size={20} color="#CBCBCB" />
-            <TextInput
-              placeholder="Search for today's meal"
-              placeholderTextColor="#CBCBCB"
-              style={styles.searchInput}
-            />
-            <TouchableOpacity>
-               <Ionicons name="options-outline" size={20} color="#CBCBCB" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Food List */}
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 100}}>
-          {foods.map((item, index) => (
-            <TouchableOpacity key={index} style={styles.card} activeOpacity={0.9}>
-              {/* Heart Icon */}
-              <TouchableOpacity style={styles.heartIcon}>
-                <Ionicons name="heart-outline" size={16} color="#FF6332" />
-              </TouchableOpacity>
-
-              <Image source={item.image} style={styles.foodImage} resizeMode="contain" />
-
-              <View style={styles.infoContainer}>
-                <Text style={styles.foodName}>{item.name}</Text>
-                <Text style={styles.foodDesc} numberOfLines={1}>{item.desc}</Text>
-                
-                <View style={styles.ratingRow}>
-                  <Ionicons name="star" size={14} color="#FF6332" />
-                  <Text style={styles.ratingText}>{item.rating}</Text>
-                </View>
-
-                <View style={styles.priceRow}>
-                  <Text style={styles.priceText}>{item.price}</Text>
-                  <TouchableOpacity style={styles.addButton}>
-                    <Ionicons name="add" size={24} color="#FFF" />
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#FF6332" style={{ marginTop: 50 }} />
+        ) : (
+          <>
+            {/* Category Tabs */}
+            <View style={styles.tabContainer}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {tabs.map((item, i) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={[styles.tab, activeTab === item.name && styles.activeTab]}
+                    onPress={() => setActiveTab(item.name)}
+                  >
+                    <Text style={[styles.tabText, activeTab === item.name && styles.activeTabText]}>
+                      {item.name}
+                    </Text>
                   </TouchableOpacity>
-                </View>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* Search Bar */}
+            <View style={styles.searchSection}>
+              <View style={styles.searchBox}>
+                <Feather name="search" size={20} color="#CBCBCB" />
+                <TextInput
+                  placeholder="Search for today's meal"
+                  placeholderTextColor="#CBCBCB"
+                  style={styles.searchInput}
+                />
+                <TouchableOpacity>
+                   <Ionicons name="options-outline" size={20} color="#CBCBCB" />
+                </TouchableOpacity>
               </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+            </View>
+
+            {/* Food List */}
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 100}}>
+              {filteredFoods.map((item) => (
+                <TouchableOpacity key={item.id} style={styles.card} activeOpacity={0.9}>
+                  {/* Heart Icon */}
+                  <TouchableOpacity style={styles.heartIcon}>
+                    <Ionicons name="heart-outline" size={16} color="#FF6332" />
+                  </TouchableOpacity>
+
+                  <Image source={item.imageUrl ? { uri: item.imageUrl } : require("../../assets/images/f1.png")} style={styles.foodImage} resizeMode="cover" />
+
+                  <View style={styles.infoContainer}>
+                    <Text style={styles.foodName}>{item.name}</Text>
+                    <Text style={styles.foodDesc} numberOfLines={1}>{item.desc}</Text>
+                    
+                    <View style={styles.ratingRow}>
+                      <Ionicons name="star" size={14} color="#FF6332" />
+                      <Text style={styles.ratingText}>{item.rating}</Text>
+                    </View>
+
+                    <View style={styles.priceRow}>
+                      <Text style={styles.priceText}>AED {item.price}</Text>
+                      <TouchableOpacity style={styles.addButton} onPress={() => handleAddToCart(item)}>
+                        <Ionicons name="add" size={24} color="#FFF" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </>
+        )}
       </View>
     </SafeAreaView>
   );

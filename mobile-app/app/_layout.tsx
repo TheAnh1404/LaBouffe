@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { CartProvider } from '../context/CartContext';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -13,7 +14,8 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <CartProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>
         
         {/* 👇 THÊM DÒNG NÀY */}
@@ -29,5 +31,6 @@ export default function RootLayout() {
 
       <StatusBar style="auto" />
     </ThemeProvider>
+    </CartProvider>
   );
 }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,9 @@ import {
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { auth, db } from "../../config/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 
 const COLORS = {
   primary: "#FF6332",
@@ -19,6 +22,37 @@ const COLORS = {
 };
 
 export default function Profile() {
+  const [userName, setUserName] = useState("Guest");
+  const [userPhone, setUserPhone] = useState("Please login");
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUserName(user.displayName || "User");
+        setUserPhone(user.phoneNumber || user.email || "No contact info");
+        setUserAvatar(user.photoURL);
+        
+        // Try fetching from users collection if exists
+        try {
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists()) {
+            const data = userDoc.data();
+            if (data.fullName) setUserName(data.fullName);
+            if (data.phoneNumber) setUserPhone(data.phoneNumber);
+            if (data.avatarUrl) setUserAvatar(data.avatarUrl);
+          }
+        } catch (e) {
+          console.log("Error fetching user profile", e);
+        }
+      } else {
+        setUserName("Guest User");
+        setUserPhone("Login to sync orders");
+      }
+    });
+    return unsubscribe;
+  }, []);
+
   const menuItems = [
     { id: 1, name: "Wallet", icon: "wallet-outline", library: Ionicons },
     { id: 2, name: "Order", icon: "format-list-bulleted", library: MaterialCommunityIcons },
@@ -40,7 +74,7 @@ export default function Profile() {
               <Ionicons name="chevron-back" size={30} color="#000" />
             </TouchableOpacity>
             
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/seed' as any)}>
               <Ionicons name="settings-outline" size={24} color="#666" />
             </TouchableOpacity>
           </View>
@@ -61,15 +95,15 @@ export default function Profile() {
         <View style={styles.userInfoSection}>
           <View style={styles.avatarContainer}>
             <Image
-              source={require("../../assets/images/user_avatar.jpg")} 
+              source={userAvatar ? { uri: userAvatar } : require("../../assets/images/user_avatar.jpg")} 
               style={styles.avatar}
             />
             <TouchableOpacity style={styles.editIconContainer}>
               <MaterialCommunityIcons name="pencil-box-outline" size={18} color="#FFF" />
             </TouchableOpacity>
           </View>
-          <Text style={styles.userName}>Nguyen The Anh</Text>
-          <Text style={styles.userPhone}>+849029132521</Text>
+          <Text style={styles.userName}>{userName}</Text>
+          <Text style={styles.userPhone}>{userPhone}</Text>
         </View>
 
         {/* Grid Menu */}

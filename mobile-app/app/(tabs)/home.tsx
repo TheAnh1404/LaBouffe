@@ -9,9 +9,11 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
-  ImageBackground,
+  ActivityIndicator,
 } from "react-native";
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
+import { useFirestoreCollection, usePopularFoods } from "../../hooks/useFirestoreData";
+import { router } from "expo-router";
 
 const { width } = Dimensions.get("window");
 
@@ -26,6 +28,15 @@ const COLORS = {
 };
 
 export default function Home() {
+  const { data: categories, loading: catLoading } = useFirestoreCollection<any>("categories");
+  const { data: restaurants, loading: resLoading } = useFirestoreCollection<any>("restaurants");
+  const { data: popularFoods, loading: popLoading } = usePopularFoods<any>();
+
+  // Filter only home specific restaurants or just show a few
+  const homeRestaurants = restaurants.filter(r => r.id.includes("res_home") || r.km).slice(0, 3);
+
+  const isLoading = catLoading || resLoading || popLoading;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -49,98 +60,83 @@ export default function Home() {
           </View>
         </View>
 
-        {/* 2. Categories */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sectionMargin}>
-          {CATEGORIES.map((item, i) => (
-            <TouchableOpacity key={i} style={styles.categoryItem}>
-              <View style={styles.categoryIconBox}>
-                 <Image source={item.icon} style={styles.categoryIconImg} />
-              </View>
-              <Text style={styles.categoryLabel}>{item.name}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        {isLoading ? (
+          <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 50 }} />
+        ) : (
+          <>
+            {/* 2. Categories */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sectionMargin}>
+              {categories.map((item, i) => (
+                <TouchableOpacity key={item.id} style={styles.categoryItem}>
+                  <View style={styles.categoryIconBox}>
+                     <Image source={item.iconUrl ? { uri: item.iconUrl } : require("../../assets/images/dishes.png")} style={styles.categoryIconImg} />
+                  </View>
+                  <Text style={styles.categoryLabel}>{item.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
 
-        {/* 3. Restaurants Section */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Restaurants</Text>
-        </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.restaurantList}>
-          {RESTAURANTS.map((res) => (
-            <TouchableOpacity key={res.id} style={styles.resCard}>
-              <Image source={res.image} style={styles.resImage} />
-              <TouchableOpacity style={styles.heartIcon}>
-                 <Ionicons name="heart-outline" size={18} color={COLORS.primary} />
-              </TouchableOpacity>
-              <View style={styles.resInfoRow}>
-                <Text style={styles.resInfoText}>Location: <Text style={{color: COLORS.primary}}>{res.km}</Text></Text>
-                <Text style={styles.resInfoText}><Ionicons name="time-outline" size={12}/> {res.time}</Text>
-                <Text style={styles.resInfoText}><Ionicons name="star" size={12} color={COLORS.secondary}/> {res.rating}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+            {/* 3. Restaurants Section */}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Restaurants</Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.restaurantList}>
+              {homeRestaurants.length > 0 ? homeRestaurants.map((res) => (
+                <TouchableOpacity key={res.id} style={styles.resCard}>
+                  <Image source={res.imageUrl ? { uri: res.imageUrl } : require("../../assets/images/banner_bg.png")} style={styles.resImage} />
+                  <TouchableOpacity style={styles.heartIcon}>
+                     <Ionicons name="heart-outline" size={18} color={COLORS.primary} />
+                  </TouchableOpacity>
+                  <View style={styles.resInfoRow}>
+                    <Text style={styles.resInfoText}>Location: <Text style={{color: COLORS.primary}}>{res.km}</Text></Text>
+                    <Text style={styles.resInfoText}><Ionicons name="time-outline" size={12}/> {res.time}</Text>
+                    <Text style={styles.resInfoText}><Ionicons name="star" size={12} color={COLORS.secondary}/> {res.rating}</Text>
+                  </View>
+                </TouchableOpacity>
+              )) : (
+                <Text style={{color: "#999", paddingVertical: 20}}>No restaurants featured here yet.</Text>
+              )}
+            </ScrollView>
 
-        {/* 4. Promo Banner */}
-        <View style={styles.bannerContainer}>
-          <View style={styles.bannerContent}>
-            <Text style={styles.bannerBadge}>New <Text style={styles.bannerBadgeDot}>•</Text> Limited time</Text>
-            <Text style={styles.bannerDesc}>
-              California-style pizza Sicilian pizza{"\n"}
-              with Burger & French fries & 1 free Coca cola drink.
-            </Text>
-            <TouchableOpacity style={styles.orderNowButton}>
-              <Text style={styles.orderNowText}>Order Now</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* 5. Popular Section */}
-        <View style={[styles.sectionHeader, styles.sectionMargin]}>
-          <Text style={styles.sectionTitle}>Popular</Text>
-          <TouchableOpacity><Text style={styles.seeAllText}>See all</Text></TouchableOpacity>
-        </View>
-
-        <View style={styles.popularGrid}>
-          {POPULAR_FOODS.map((food) => (
-            <View key={food.id} style={styles.foodCard}>
-              <Image source={food.image} style={styles.foodImg} />
-              <View style={styles.ratingBadge}>
-                <Ionicons name="star" size={12} color={COLORS.secondary} />
-                <Text style={styles.ratingText}>{food.rating}</Text>
+            {/* 4. Promo Banner */}
+            <View style={styles.bannerContainer}>
+              <View style={styles.bannerContent}>
+                <Text style={styles.bannerBadge}>New <Text style={styles.bannerBadgeDot}>•</Text> Limited time</Text>
+                <Text style={styles.bannerDesc}>
+                  California-style pizza Sicilian pizza{"\n"}
+                  with Burger & French fries & 1 free Coca cola drink.
+                </Text>
+                <TouchableOpacity style={styles.orderNowButton}>
+                  <Text style={styles.orderNowText}>Order Now</Text>
+                </TouchableOpacity>
               </View>
             </View>
-          ))}
-        </View>
+
+            {/* 5. Popular Section */}
+            <View style={[styles.sectionHeader, styles.sectionMargin]}>
+              <Text style={styles.sectionTitle}>Popular</Text>
+              <TouchableOpacity onPress={() => router.push('/menu')}><Text style={styles.seeAllText}>See all</Text></TouchableOpacity>
+            </View>
+
+            <View style={styles.popularGrid}>
+              {popularFoods.map((food) => (
+                <View key={food.id} style={styles.foodCard}>
+                  <Image source={food.imageUrl ? { uri: food.imageUrl } : require("../../assets/images/f1.png")} style={styles.foodImg} />
+                  <View style={styles.ratingBadge}>
+                    <Ionicons name="star" size={12} color={COLORS.secondary} />
+                    <Text style={styles.ratingText}>{food.rating}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
         
         <View style={{height: 100}} /> 
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-// --- DATA MOCK ---
-const CATEGORIES = [
-  { name: "Dishes", icon: require("../../assets/images/dishes.png") },
-  { name: "Pizza", icon: require("../../assets/images/pizza.png") },
-  { name: "Burger", icon: require("../../assets/images/burger.png") },
-  { name: "Drinks", icon: require("../../assets/images/drinks.png") },
-  { name: "Dessert", icon: require("../../assets/images/dessert.png") },
-];
-
-const RESTAURANTS = [
-  { id: 1, km: "2KM", time: "15 mins.", rating: "4.5", image: require("../../assets/images/banner_bg.png") },
-  { id: 2, km: "3KM", time: "20 mins.", rating: "4.8", image: require("../../assets/images/banner_bg2.png") },
-];
-
-const POPULAR_FOODS = [
-  { id: 1, rating: "5.0", image: require("../../assets/images/f1.png") },
-  { id: 2, rating: "4.5", image: require("../../assets/images/f2.png") },
-  { id: 3, rating: "4.0", image: require("../../assets/images/f3.png") },
-  { id: 4, rating: "5.0", image: require("../../assets/images/f4.png") },
-  { id: 5, rating: "4.5", image: require("../../assets/images/f5.png") },
-  { id: 6, rating: "3.5", image: require("../../assets/images/f6.png") },
-];
 
 // --- STYLES ---
 const styles = StyleSheet.create({

@@ -7,53 +7,14 @@ import {
   TouchableOpacity,
   Image,
   SafeAreaView,
+  ActivityIndicator
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons, Feather } from "@expo/vector-icons";
-
-const restaurants = [
-  {
-    name: "Al Halbi Restaurant",
-    desc: "Grills, Kebab, Sandwiches",
-    rating: "4.5 (100+)",
-    time: "20 mins",
-    price: "AED 2.50",
-    image: require("../../assets/images/res_alhalbi.png"),
-  },
-  {
-    name: "Chikiki Restaurant",
-    desc: "Burgers, Wraps, Sandwiches",
-    rating: "4.5 (100+)",
-    time: "15 mins",
-    price: "AED 1.50",
-    image: require("../../assets/images/res_chikiki.png"),
-  },
-  {
-    name: "La Rosana Restaurant",
-    desc: "Pasta, Desserts, Drinks",
-    rating: "4.6 (100+)",
-    time: "25 mins",
-    price: "AED 3.50",
-    image: require("../../assets/images/res_larosana.png"),
-  },
-  {
-    name: "Al Shary Restaurant",
-    desc: "Grills, Kebab, Egyptian",
-    rating: "4.5 (100+)",
-    time: "20 mins",
-    price: "AED 2.50",
-    image: require("../../assets/images/res_alshary.png"),
-  },
-  {
-    name: "Sizzler Restaurant",
-    desc: "Pizza, Burger, Sandwiches",
-    rating: "4.7 (100+)",
-    time: "20 mins",
-    price: "AED 3.50",
-    image: require("../../assets/images/res_sizzler.png"),
-  },
-];
+import { useFirestoreCollection } from "../../hooks/useFirestoreData";
 
 export default function RestaurantList() {
+  const { data: restaurants, loading } = useFirestoreCollection<any>("restaurants");
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -62,60 +23,64 @@ export default function RestaurantList() {
           <Ionicons name="chevron-back" size={28} color="#000" />
         </TouchableOpacity>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 100}}>
-          {/* Filter Row */}
-          <View style={styles.filterRow}>
-            <TouchableOpacity style={styles.filterBox}>
-              <Feather name="sliders" size={18} color="#888" />
-              <Text style={styles.filterText}>Filters</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.filterBox}>
-              <MaterialCommunityIcons name="silverware-fork-knife" size={18} color="#888" />
-              <Text style={styles.filterText}>Cuisines</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.filterBox}>
-              <Feather name="search" size={18} color="#888" />
-              <Text style={styles.filterText}>Search</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Section Title */}
-          <View style={styles.titleRow}>
-            <Text style={styles.title}>All restaurants</Text>
-            <MaterialCommunityIcons name="food-outline" size={24} color="#FF6332" />
-          </View>
-
-          {/* List of Restaurants */}
-          {restaurants.map((item, index) => (
-            <TouchableOpacity key={index} style={styles.card} activeOpacity={0.9}>
-              <Image source={item.image} style={styles.resImage} />
-
-              <View style={styles.infoContainer}>
-                <Text style={styles.resName}>{item.name}</Text>
-                <Text style={styles.resDesc}>{item.desc}</Text>
-
-                <View style={styles.metaRow}>
-                  <Ionicons name="star" size={14} color="#FF6332" />
-                  <Text style={styles.ratingText}>{item.rating}</Text>
-                </View>
-
-                <View style={styles.metaRow}>
-                  <Feather name="clock" size={12} color="#AAA" />
-                  <Text style={styles.metaText}>{item.time}</Text>
-                  <View style={styles.dotSeparator} />
-                  <MaterialCommunityIcons name="moped" size={16} color="#555" />
-                  <Text style={styles.metaText}>{item.price}</Text>
-                </View>
-              </View>
-
-              <TouchableOpacity style={styles.heartIcon}>
-                <Ionicons name="heart-outline" size={20} color="#FF6332" />
+        {loading ? (
+          <ActivityIndicator size="large" color="#FF6332" style={{ marginTop: 50 }} />
+        ) : (
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 100}}>
+            {/* Filter Row */}
+            <View style={styles.filterRow}>
+              <TouchableOpacity style={styles.filterBox}>
+                <Feather name="sliders" size={18} color="#888" />
+                <Text style={styles.filterText}>Filters</Text>
               </TouchableOpacity>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+
+              <TouchableOpacity style={styles.filterBox}>
+                <MaterialCommunityIcons name="silverware-fork-knife" size={18} color="#888" />
+                <Text style={styles.filterText}>Cuisines</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.filterBox}>
+                <Feather name="search" size={18} color="#888" />
+                <Text style={styles.filterText}>Search</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Section Title */}
+            <View style={styles.titleRow}>
+              <Text style={styles.title}>All restaurants</Text>
+              <MaterialCommunityIcons name="food-outline" size={24} color="#FF6332" />
+            </View>
+
+            {/* List of Restaurants */}
+            {restaurants.map((item) => (
+              <TouchableOpacity key={item.id} style={styles.card} activeOpacity={0.9}>
+                <Image source={item.imageUrl ? { uri: item.imageUrl } : require("../../assets/images/res_alhalbi.png")} style={styles.resImage} />
+
+                <View style={styles.infoContainer}>
+                  <Text style={styles.resName}>{item.name}</Text>
+                  <Text style={styles.resDesc}>{item.desc}</Text>
+
+                  <View style={styles.metaRow}>
+                    <Ionicons name="star" size={14} color="#FF6332" />
+                    <Text style={styles.ratingText}>{item.rating}</Text>
+                  </View>
+
+                  <View style={styles.metaRow}>
+                    <Feather name="clock" size={12} color="#AAA" />
+                    <Text style={styles.metaText}>{item.time}</Text>
+                    <View style={styles.dotSeparator} />
+                    <MaterialCommunityIcons name="moped" size={16} color="#555" />
+                    <Text style={styles.metaText}>{item.price || "Free"}</Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity style={styles.heartIcon}>
+                  <Ionicons name="heart-outline" size={20} color="#FF6332" />
+                </TouchableOpacity>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
       </View>
     </SafeAreaView>
   );
