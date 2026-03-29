@@ -8,13 +8,12 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Alert,
-  ScrollView,
   Modal
 } from "react-native";
 import { router } from "expo-router";
-import { Ionicons, Feather, FontAwesome, AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 import { auth } from "../../config/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { sendPasswordResetEmail } from "firebase/auth";
 
 const COLORS = {
   primary: '#FF6332',
@@ -25,40 +24,32 @@ const COLORS = {
   iconColor: '#FF6332',
 };
 
-export default function Login() {
-  const [showPassword, setShowPassword] = useState(false);
+export default function ForgotPassword() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSuccessModalVisible, setSuccessModalVisible] = useState(false);
 
-  const handleLogin = async () => {
+  const handleResetPassword = async () => {
     const cleanEmail = email.trim();
-    if (!cleanEmail || !password) {
-      Alert.alert("Thiếu thông tin", "Vui lòng nhập đầy đủ Email và Mật khẩu.");
+    if (!cleanEmail) {
+      Alert.alert("Missing Information", "Please enter your email address.");
       return;
     }
 
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, cleanEmail, password);
+      await sendPasswordResetEmail(auth, cleanEmail);
+      // Hiển thị Custom Modal cực xịn thay vì Alert mặc định
       setSuccessModalVisible(true);
     } catch (error: any) {
-      console.log("Firebase Login Error:", error);
-      let errorMessage = error.message || "Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.";
-      
-      if (
-        error.code === 'auth/user-not-found' || 
-        error.code === 'auth/invalid-credential' || 
-        error.code === 'auth/wrong-password'
-      ) {
-        errorMessage = "Sai mật khẩu hoặc địa chỉ email!";
+      console.log("Firebase Reset Password Error:", error);
+      let errorMessage = error.message || "An error occurred. Please try again.";
+      if (error.code === 'auth/user-not-found') {
+        errorMessage = "User not found with this email.";
       } else if (error.code === 'auth/invalid-email') {
-        errorMessage = "Định dạng Email không hợp lệ!";
-      } else if (error.code === 'auth/too-many-requests') {
-        errorMessage = "Bạn đã thử quá nhiều lần. Vui lòng thử lại sau.";
+        errorMessage = "That email address is invalid.";
       }
-      Alert.alert("Đăng nhập thất bại", errorMessage);
+      Alert.alert("Error", errorMessage);
     } finally {
       setLoading(false);
     }
@@ -71,21 +62,21 @@ export default function Login() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="chevron-back" size={28} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.topWelcomeText}>Welcome to La bouffe</Text>
+        <Text style={styles.topWelcomeText}></Text>
         <View style={{ width: 28 }} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40, flexGrow: 1 }}>
+      <View style={styles.content}>
         {/* Title Section */}
         <View style={styles.header}>
           <View style={styles.dotsContainer}>
             <View style={styles.dot} />
-            <View style={[styles.dot, styles.activeDot]} />
             <View style={styles.dot} />
+            <View style={[styles.dot, styles.activeDot]} />
           </View>
 
-          <Text style={styles.title}>Welcome Back !</Text>
-          <Text style={styles.subtitle}>Please log in to your account</Text>
+          <Text style={styles.title}>Forgotten Password</Text>
+          <Text style={styles.subtitle}>Please enter your email to receive a link</Text>
         </View>
 
         {/* Form Section */}
@@ -93,7 +84,7 @@ export default function Login() {
           <View style={styles.inputContainer}>
             <MaterialCommunityIcons name="email-outline" size={20} color={COLORS.iconColor} style={styles.inputIcon} />
             <TextInput 
-              placeholder="Email" 
+              placeholder="Email address" 
               style={styles.input} 
               keyboardType="email-address"
               autoCapitalize="none"
@@ -103,74 +94,20 @@ export default function Login() {
             />
           </View>
 
-          <View style={styles.inputContainer}>
-            <Feather name="lock" size={20} color={COLORS.iconColor} style={styles.inputIcon} />
-            <TextInput
-              placeholder="Password"
-              style={styles.input}
-              secureTextEntry={!showPassword}
-              placeholderTextColor="#AFAFAF"
-              value={password}
-              onChangeText={setPassword}
-            />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Text style={styles.showText}>{showPassword ? "Hide" : "Show"}</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Forgot Password Link */}
+          {/* Reset Button */}
           <TouchableOpacity 
-            style={styles.forgotContainer}
-            onPress={() => router.push('/(auth)/forgot-password')}
-          >
-            <Text style={styles.forgotText}>Forgot password?</Text>
-          </TouchableOpacity>
-
-          {/* Log in Button */}
-          <TouchableOpacity 
-            style={[styles.loginButton, loading && { opacity: 0.7 }]}
-            onPress={handleLogin} 
+            style={[styles.resetButton, loading && { opacity: 0.7 }]}
+            onPress={handleResetPassword} 
             disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color="#FFF" />
             ) : (
-              <Text style={styles.loginButtonText}>Log In</Text>
+              <Text style={styles.resetButtonText}>Send Reset Link</Text>
             )}
           </TouchableOpacity>
-
-          {/* Connect With Section */}
-          <View style={styles.socialSection}>
-            <View style={styles.dividerContainer}>
-              <View style={styles.line} />
-              <Text style={styles.connectText}>Connect with</Text>
-              <View style={styles.line} />
-            </View>
-
-            <View style={styles.socialIcons}>
-              <TouchableOpacity style={styles.iconCircle}>
-                <Ionicons name="logo-facebook" size={30} color="#1877F2" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.iconCircle}>
-                <Ionicons name="logo-apple" size={30} color="#000" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.iconCircle}>
-                <Ionicons name="logo-google" size={30} color="#DB4437" />
-              </TouchableOpacity>
-            </View>
-          </View>
         </View>
-
-        {/* Bottom register link (Like screen 9) */}
-        <View style={{ flex: 1, justifyContent: 'flex-end', alignItems: 'center', marginTop: 50 }}>
-          <View style={{flexDirection: 'row'}}>
-             <Text style={{color: COLORS.textSub, fontSize: 13}}>Don't have an account? </Text>
-             <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-                 <Text style={{color: COLORS.primary, fontWeight: '700', fontSize: 13}}>Create an account</Text>
-             </TouchableOpacity>
-          </View>
-        </View>
-      </ScrollView>
+      </View>
 
       {/* SUCCESS MODAL */}
       <Modal
@@ -188,13 +125,13 @@ export default function Login() {
                </View>
             </View>
 
-            <Text style={styles.modalText}>Login Successful</Text>
+            <Text style={styles.modalText}>Reset Link Sent Successfully</Text>
 
             <TouchableOpacity 
               style={styles.modalButton} 
               onPress={() => {
                 setSuccessModalVisible(false);
-                router.replace("/(tabs)/home");
+                router.replace("/(auth)/otp-verification");
               }}
             >
               <Text style={styles.modalButtonText}>Proceed</Text>
@@ -203,7 +140,6 @@ export default function Login() {
           </View>
         </View>
       </Modal>
-
     </SafeAreaView>
   );
 }
@@ -230,9 +166,12 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: COLORS.textMain,
   },
+  content: {
+    flex: 1,
+    paddingTop: 15,
+  },
   header: {
     alignItems: "center",
-    marginTop: 15,
   },
   dotsContainer: {
     flexDirection: "row",
@@ -269,8 +208,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     paddingHorizontal: 15,
     height: 55,
-    marginBottom: 15,
-    // Shadow cho iOS & Android
+    marginBottom: 35,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.04,
@@ -288,72 +226,21 @@ const styles = StyleSheet.create({
     color: COLORS.textMain,
     fontWeight: '500',
   },
-  showText: {
-    color: "#CCC",
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  forgotContainer: {
-    alignSelf: 'flex-end',
-    marginBottom: 25,
-    marginRight: 5,
-  },
-  forgotText: {
-    color: '#B0B0B0',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  loginButton: {
+  resetButton: {
     backgroundColor: COLORS.primary,
     height: 55,
     borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 40,
   },
-  loginButtonText: {
+  resetButtonText: {
     color: "#FFF",
     fontSize: 16,
     fontWeight: "bold",
   },
-  socialSection: {
-    alignItems: 'center',
-    width: "100%",
-  },
-  dividerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-    width: '80%',
-    alignSelf: 'center',
-  },
-  line: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#EEEEEE",
-  },
-  connectText: {
-    marginHorizontal: 15,
-    color: "#AAA",
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  socialIcons: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 35,
-  },
-  iconCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#F5F5F5',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)', // Dim background
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
   },

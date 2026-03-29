@@ -31,7 +31,7 @@ export default function Onboarding1() {
       {/* Bottom Action - Nút Skip */}
       <TouchableOpacity
         style={styles.skipButton}
-        onPress={() => router.push('/onboarding/onboarding2')}
+        onPress={() => router.push('/(auth)/welcome')}
         activeOpacity={0.7}
       >
         <View style={styles.dot} />

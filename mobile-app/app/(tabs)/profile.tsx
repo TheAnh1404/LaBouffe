@@ -12,7 +12,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { auth, db } from "../../config/firebase";
 import { doc, getDoc } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 
 const COLORS = {
   primary: "#FF6332",
@@ -118,6 +118,18 @@ export default function Profile() {
             );
           })}
         </View>
+
+        {/* LOGOUT BUTTON */}
+        <TouchableOpacity 
+          style={styles.logoutBtn} 
+          onPress={() => {
+            signOut(auth);
+            router.replace('/(auth)/welcome');
+          }}
+        >
+           <MaterialCommunityIcons name="logout" size={24} color={COLORS.primary} />
+           <Text style={styles.logoutText}>Log Out</Text>
+        </TouchableOpacity>
         
         <View style={{height: 100}} />
       </ScrollView>
@@ -222,4 +234,20 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginTop: 12,
   },
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFEFEB',
+    marginHorizontal: 25,
+    marginTop: 10,
+    height: 60,
+    borderRadius: 20,
+  },
+  logoutText: {
+    color: COLORS.primary,
+    fontSize: 18,
+    fontWeight: '800',
+    marginLeft: 10,
+  }
 });
