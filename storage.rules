@@ -1,0 +1,36 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ─── Helper Functions ────────────────────────────────────────
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // ─── Public Images (Categories, Foods, Restaurants) ──────────
+    // Anyone can read images, only authenticated users can upload
+    match /categories/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    match /foods/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    match /restaurants/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // ─── User Avatars ────────────────────────────────────────────
+    // Users can read any avatar, but only upload their own
+    match /avatars/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.uid == userId
+                   && request.resource.size < 5 * 1024 * 1024 // Max 5MB
+                   && request.resource.contentType.matches('image/.*');
+    }
+  }
+}

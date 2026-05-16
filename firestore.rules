@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper Functions ────────────────────────────────────────
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // ─── Public Data (Read-only for all users) ───────────────────
+    // Foods: Anyone can read, only admin or server can write
+    match /foods/{foodId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Categories: Anyone can read, only admin can write
+    match /categories/{catId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Restaurants: Anyone can read, only admin can write
+    match /restaurants/{resId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ─── Orders (Strictly controlled) ────────────────────────────
+    // Orders are CREATED by Cloud Functions only.
+    // Users can only READ their own orders.
+    match /orders/{orderId} {
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      allow create: if false; // Only Cloud Functions (admin SDK) can create
+      allow update: if false; // Only Cloud Functions can update status
+      allow delete: if false; // Orders are never deleted
+    }
+
+    // ─── User Profiles ───────────────────────────────────────────
+    match /users/{userId} {
+      // Users can read and update their own profile
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false;
+
+      // Favorites subcollection — only owner can manage
+      match /favorites/{favId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // ─── Admin Collection ────────────────────────────────────────
+    // Only readable by authenticated users (for role checks), never writable from client
+    match /admins/{adminId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Managed via Firebase Console only
+    }
+  }
+}

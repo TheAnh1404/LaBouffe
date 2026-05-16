@@ -1,162 +1,203 @@
-<h1 align="center">🍽️ LaBouffe</h1>
+# 🍽️ LaBouffe — Food Delivery Mobile App
 
-<p align="center">
-  <strong>A Modern Food Ordering Mobile App</strong>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React Native Badge" />
-  <img src="https://img.shields.io/badge/Expo-1B1F23?style=for-the-badge&logo=expo&logoColor=white" alt="Expo Badge" />
-  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript Badge" />
-  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js Badge" />
-  <img src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase Badge" />
-</p>
-
-## 📌 Introduction
-
-**LaBouffe** is a modern and intuitive mobile food ordering application designed to deliver a seamless user experience. The app empowers users to explore a diverse variety of dishes, view detailed culinary information, and place orders effortlessly through a clean and responsive interface.
-
-Developed as part of a university coursework, this project places a strong emphasis on real-world mobile development practices, robust architecture, and exceptional UI/UX implementation.
+A production-ready food delivery application built with **React Native (Expo)** and **Firebase**, featuring server-side order processing, real-time updates, and push notifications.
 
 ---
 
-## 🚀 Features
+## 🏗️ Architecture Overview
 
-### 📱 Onboarding Experience
-* **Smooth Transitions**: Engaging swipe-based introduction screens to introduce the app.
-* **Branded Splash Screen**: A professional initial loading screen.
-
-### 🏠 Home Screen
-* **Interactive Browsing**: Effortlessly browse food items across various categories.
-* **Modern Interface**: Designed with a clean and visually appealing UI.
-
-### 🍔 Food Details
-* **Comprehensive Information**: View essential details for each dish.
-* **Rich Content**: Includes pricing, mouth-watering descriptions, and user ratings.
-
-### 🛒 Cart System
-* **Dynamic Management**: Easily add or remove items from your cart.
-* **Real-time Updates**: Effortlessly update quantities and instantly view total costs.
-
-### 👤 User Profile
-* **Personalized Experience**: Manage basic user information and preferences.
-
----
-
-## 📸 Screenshots
-
-*(Coming Soon - Add app screenshots or GIFs here)*
-
----
-
-## 🛠️ Tech Stack
-
-### Frontend
-* **[React Native (Expo)](https://expo.dev/)** – Framework for building native apps using React.
-* **[Expo Router](https://docs.expo.dev/router/introduction/)** – File-based routing for React Native.
-* **Figma** – UI/UX design and prototyping.
-
-### Backend (Planned)
-* **[Node.js](https://nodejs.org/) & [Express](https://expressjs.com/)** – High-performance server environment.
-* **[Firebase](https://firebase.google.com/) / [MongoDB](https://mongodb.com/)** – Flexible, scalable database solutions.
-
----
-
-## 📂 Project Structure
-
-```bash
-mobile-app/             # Frontend React Native application
- ├── app/
- │    ├── index.tsx     # Entry point (redirects to splash)
- │    ├── splash.tsx    # Splash screen
- │    ├── onboarding.tsx# Onboarding screens
- │    │
- │    └── (tabs)/       # Main tab navigation
- │         ├── index.tsx
- │         ├── cart.tsx
- │         ├── profile.tsx
- │         └── _layout.tsx
- │
- ├── components/        # Reusable UI components
- │    ├── FoodCard.tsx
- │    ├── Header.tsx
- │    └── Button.tsx
- │
- └── assets/            # Static images & fonts
-
-backend/                # (Planned) Backend API Services
+```
+┌─────────────────────────────────────────────────┐
+│                  Mobile App                      │
+│           (React Native + Expo)                  │
+│                                                  │
+│  ┌──────────┐ ┌──────────┐ ┌──────────────────┐ │
+│  │   Auth   │ │   Cart   │ │  Push Notifs     │ │
+│  │ Context  │ │ Context  │ │  (expo-notifs)   │ │
+│  └────┬─────┘ └────┬─────┘ └────────┬─────────┘ │
+│       │            │                │            │
+│  ┌────┴────────────┴────────────────┴──────────┐ │
+│  │        Services Layer (api.ts)              │ │
+│  └──────────────────┬──────────────────────────┘ │
+└─────────────────────┼───────────────────────────┘
+                      │ Cloud Functions (HTTPS Callable)
+┌─────────────────────┼───────────────────────────┐
+│              Firebase Backend                    │
+│                                                  │
+│  ┌──────────────────┴──────────────────────────┐ │
+│  │         Cloud Functions (Node.js)           │ │
+│  │  • processOrder — Server-side checkout      │ │
+│  │  • onOrderStatusChange — Push notifications │ │
+│  │  • onUserCreate — Profile initialization    │ │
+│  └─────────────────────────────────────────────┘ │
+│                                                  │
+│  ┌──────────────┐ ┌──────────┐ ┌──────────────┐ │
+│  │  Firestore   │ │   Auth   │ │   Storage    │ │
+│  │  (Database)  │ │  (Users) │ │  (Images)    │ │
+│  └──────────────┘ └──────────┘ └──────────────┘ │
+│                                                  │
+│  ┌──────────────┐ ┌──────────────────────────┐  │
+│  │  Security    │ │    FCM                   │  │
+│  │  Rules       │ │  (Push Notifications)    │  │
+│  └──────────────┘ └──────────────────────────┘  │
+└──────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🧠 Development Approach
+## 📁 Project Structure
 
-This project strictly adheres to a **UI-First Development Strategy**:
-
-1. **Design UI**: Prototype the complete user interface using Figma.
-2. **Frontend Mockup**: Build the frontend components utilizing mock data to validate the design.
-3. **API Definition**: Define a structured API scheme specifically tailored to UI requirements.
-4. **Backend Services**: Develop scalable backend services and endpoints.
-5. **Full Integration**: Connect the frontend mobile app with the live backend.
+```
+LaBouffe/
+├── functions/                   # Firebase Cloud Functions (Backend)
+│   ├── src/
+│   │   ├── index.ts             # Entry point
+│   │   ├── orders/
+│   │   │   ├── processOrder.ts  # Server-side checkout logic
+│   │   │   └── onOrderStatusChange.ts  # Push notification trigger
+│   │   └── users/
+│   │       └── onUserCreate.ts  # Auto-create user profile
+│   ├── package.json
+│   └── tsconfig.json
+├── firestore.rules              # Firestore Security Rules
+├── storage.rules                # Storage Security Rules
+├── firebase.json                # Firebase project config
+├── .firebaserc                  # Firebase project link
+│
+└── mobile-app/                  # React Native (Expo) Frontend
+    ├── app/                     # Screens (Expo Router)
+    │   ├── (auth)/              # Login, Register, Forgot Password
+    │   ├── (tabs)/              # Home, Menu, Cart, Restaurants, Profile
+    │   ├── food-detail.tsx      # Food detail screen
+    │   └── order-history.tsx    # Order history screen
+    ├── components/              # Reusable UI components
+    ├── config/
+    │   └── firebase.ts          # Firebase initialization
+    ├── constants/
+    │   └── theme.ts             # Design tokens (colors, spacing, etc.)
+    ├── context/                 # React Contexts (Auth, Cart, Favorites)
+    ├── hooks/                   # Custom hooks (Firestore data, orders)
+    ├── services/                # API & notification services
+    │   ├── api.ts               # Cloud Functions service layer
+    │   └── notifications.ts     # Push notification handler
+    └── types/                   # Shared TypeScript types
+        ├── food.ts
+        ├── order.ts
+        ├── user.ts
+        └── restaurant.ts
+```
 
 ---
 
-## 🎨 UI Design Philosophy
+## 🔐 Security Model
 
-The UI draws inspiration from industry-leading food delivery applications, optimizing for:
-* **Simplicity and Clarity**: Minimizing cognitive load.
-* **User-friendly Navigation**: Making desired actions accessible within minimal taps.
-* **Fluid Performance**: Ensuring a smooth, native-feeling mobile experience.
+| Collection | Read | Write | Notes |
+|---|---|---|---|
+| `foods` | ✅ Public | 🔒 Admin only | Menu items |
+| `categories` | ✅ Public | 🔒 Admin only | Food categories |
+| `restaurants` | ✅ Public | 🔒 Admin only | Restaurant info |
+| `orders` | 👤 Owner only | 🔒 Server only | Cloud Functions create orders |
+| `users/{uid}` | 👤 Owner only | 👤 Owner only | User profiles |
+| `users/{uid}/favorites` | 👤 Owner only | 👤 Owner only | Saved favorites |
+
+**Key principle:** *Orders are NEVER created from the client.* The mobile app sends only `foodId` + `quantity` to a Cloud Function, which validates prices server-side.
 
 ---
 
-## ▶️ Getting Started
+## 🚀 Getting Started
 
-Follow these instructions to run the frontend mobile project locally.
+### Prerequisites
 
-### 1. Clone the repository
+- Node.js 18+
+- [Firebase CLI](https://firebase.google.com/docs/cli): `npm install -g firebase-tools`
+- [Expo CLI](https://docs.expo.dev/get-started/installation/)
+
+### 1. Clone & Install
+
 ```bash
 git clone https://github.com/TheAnh1404/LaBouffe.git
-cd LaBouffe/mobile-app
+cd LaBouffe
+
+# Install Cloud Functions dependencies
+cd functions && npm install && cd ..
+
+# Install Mobile App dependencies
+cd mobile-app && npm install && cd ..
 ```
 
-### 2. Install dependencies
+### 2. Configure Firebase
 
 ```bash
-npm install
+# Login to Firebase
+firebase login
+
+# Deploy Security Rules
+firebase deploy --only firestore:rules,storage:rules
+
+# Deploy Cloud Functions
+firebase deploy --only functions
 ```
 
-### 3. Run the application
+### 3. Run Mobile App
 
 ```bash
+cd mobile-app
 npx expo start
 ```
 
-### 4. Open the application
+---
 
-* **Web**: Press `w` in your terminal.
-* **Mobile**: Scan the QR code generated in the terminal using the **Expo Go** app (available on iOS and Android).
+## 🔧 Cloud Functions
+
+### `processOrder` (HTTPS Callable)
+- **Input**: `{ items: [{ foodId: string, quantity: number }] }`
+- **Logic**: Validates user auth → Looks up prices in DB → Calculates fees → Creates order
+- **Output**: `{ success: boolean, orderId: string, totalAmount: number }`
+
+### `onOrderStatusChange` (Firestore Trigger)
+- **Trigger**: Any update to `orders/{orderId}`
+- **Logic**: Detects status change → Sends FCM push notification to user
+
+### `onUserCreate` (Auth Trigger)
+- **Trigger**: New user registration
+- **Logic**: Creates default profile document with `role: 'customer'`
 
 ---
 
-## 🎯 Future Improvements
+## 📱 Tech Stack
 
-- [ ] **🔐 User Authentication**: Secure login and registration.
-- [ ] **💳 Payment Integration**: Online payment gateways for seamless checkout.
-- [ ] **📍 Order Tracking**: Real-time GPS tracking for food delivery.
-- [ ] **🤖 Recommendation System**: AI-driven personalized food recommendations based on user history.
+| Layer | Technology |
+|---|---|
+| **Mobile App** | React Native (Expo SDK 54) |
+| **Navigation** | Expo Router v6 |
+| **Backend** | Firebase Cloud Functions (Node.js 18) |
+| **Database** | Cloud Firestore |
+| **Auth** | Firebase Authentication |
+| **Storage** | Firebase Cloud Storage |
+| **Notifications** | Firebase Cloud Messaging + Expo Notifications |
+| **Language** | TypeScript (Strict mode) |
+
+---
+
+## 📋 Available Scripts
+
+### Mobile App (`/mobile-app`)
+| Command | Description |
+|---|---|
+| `npx expo start` | Start dev server |
+| `npx expo start --android` | Start on Android |
+| `npx expo start --ios` | Start on iOS |
+
+### Cloud Functions (`/functions`)
+| Command | Description |
+|---|---|
+| `npm run build` | Compile TypeScript |
+| `npm run serve` | Run with Firebase Emulator |
+| `npm run deploy` | Deploy to Firebase |
+| `npm run logs` | View function logs |
 
 ---
 
-## 👨‍💻 Author
+## 👤 Author
 
-**Nguyễn Thế Anh**
-
----
-
-## 📄 License
-
-This project is developed for **educational purposes**.
-
----
-<p align="center">Made with ❤️ for food lovers</p>
+**TheAnh1404** — [GitHub](https://github.com/TheAnh1404)

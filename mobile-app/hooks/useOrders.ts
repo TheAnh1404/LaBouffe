@@ -1,66 +1,27 @@
+/**
+ * useOrders — Realtime Order Listener Hook
+ *
+ * Uses Firestore onSnapshot for REALTIME order updates.
+ * When the restaurant changes order status (e.g., "preparing" → "delivering"),
+ * the UI updates instantly without manual refresh.
+ *
+ * Previous version used getDocs (one-time fetch) which required manual refetch.
+ */
+
 import { useState, useEffect } from "react";
-import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
 import { db, auth } from "../config/firebase";
+import { Order } from "../types/order";
 
-export type OrderItem = {
-  id: string;
-  name: string;
-  desc: string;
-  price: number;
-  imageUrl: string;
-  quantity: number;
-};
-
-export type Order = {
-  id: string;
-  userId: string;
-  items: OrderItem[];
-  subtotal: number;
-  discount: number;
-  deliveryFee: number;
-  serviceFee: number;
-  totalAmount: number;
-  status: "placed" | "preparing" | "delivering" | "delivered";
-  createdAt: any; // Firestore Timestamp
-};
+export type { Order };
+export type { OrderItem } from "../types/order";
 
 export function useOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      const user = auth.currentUser;
-      if (!user) {
-        setOrders([]);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const q = query(
-          collection(db, "orders"),
-          where("userId", "==", user.uid),
-          orderBy("createdAt", "desc")
-        );
-        const querySnapshot = await getDocs(q);
-        const items: Order[] = [];
-        querySnapshot.forEach((doc) => {
-          items.push({ id: doc.id, ...doc.data() } as Order);
-        });
-        setOrders(items);
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrders();
-  }, []);
-
-  const refetch = async () => {
-    setLoading(true);
     const user = auth.currentUser;
     if (!user) {
       setOrders([]);
@@ -68,24 +29,36 @@ export function useOrders() {
       return;
     }
 
-    try {
-      const q = query(
-        collection(db, "orders"),
-        where("userId", "==", user.uid),
-        orderBy("createdAt", "desc")
-      );
-      const querySnapshot = await getDocs(q);
-      const items: Order[] = [];
-      querySnapshot.forEach((doc) => {
-        items.push({ id: doc.id, ...doc.data() } as Order);
-      });
-      setOrders(items);
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    // ─── Realtime Listener ─────────────────────────────────────
+    // This replaces the old getDocs() one-time fetch.
+    // Now orders update automatically when status changes.
+    const q = query(
+      collection(db, "orders"),
+      where("userId", "==", user.uid),
+      orderBy("createdAt", "desc")
+    );
 
-  return { orders, loading, refetch };
+    const unsubscribe = onSnapshot(
+      q,
+      (querySnapshot) => {
+        const items: Order[] = [];
+        querySnapshot.forEach((doc) => {
+          items.push({ id: doc.id, ...doc.data() } as Order);
+        });
+        setOrders(items);
+        setLoading(false);
+        setError(null);
+      },
+      (err) => {
+        console.error("Error listening to orders:", err);
+        setError(err.message);
+        setLoading(false);
+      }
+    );
+
+    // Cleanup listener on unmount
+    return () => unsubscribe();
+  }, []);
+
+  return { orders, loading, error };
 }

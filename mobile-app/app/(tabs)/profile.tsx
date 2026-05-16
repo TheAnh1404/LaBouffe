@@ -12,7 +12,8 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { auth, db } from "../../config/firebase";
 import { doc, getDoc } from "firebase/firestore";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
+import { useAuth } from "../../context/AuthContext";
 
 import { COLORS } from "../../constants/theme";
 
@@ -20,6 +21,7 @@ export default function Profile() {
   const [userName, setUserName] = useState("Guest");
   const [userPhone, setUserPhone] = useState("Please login");
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const { signOut } = useAuth();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -122,8 +124,8 @@ export default function Profile() {
         {/* LOGOUT BUTTON */}
         <TouchableOpacity 
           style={styles.logoutBtn} 
-          onPress={() => {
-            signOut(auth);
+          onPress={async () => {
+            await signOut();
             router.replace('/(auth)/welcome');
           }}
         >

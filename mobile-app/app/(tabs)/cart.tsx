@@ -14,8 +14,7 @@ import { Ionicons, AntDesign, MaterialCommunityIcons } from "@expo/vector-icons"
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
 import { router } from "expo-router";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "../../config/firebase";
+import { placeOrder } from "../../services/api";
 import { COLORS } from "../../constants/theme";
 import SuccessModal from "../../components/SuccessModal";
 
@@ -25,12 +24,23 @@ export default function Cart() {
   const [checkingOut, setCheckingOut] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  const discount = cartItems.length > 0 ? 5 : 0;
-  const deliveryFee = cartItems.length > 0 ? 2 : 0;
-  const serviceFee = cartItems.length > 0 ? 1.5 : 0;
+  // Display-only fee estimates (actual fees calculated server-side)
+  const estimatedDiscount = cartTotal > 50 ? 5 : 0;
+  const estimatedDeliveryFee = cartItems.length > 0 ? 2 : 0;
+  const estimatedServiceFee = cartItems.length > 0 ? 1.5 : 0;
+  const estimatedTotal = cartTotal > 0
+    ? cartTotal - estimatedDiscount + estimatedDeliveryFee + estimatedServiceFee
+    : 0;
 
-  const totalAmount = cartTotal > 0 ? cartTotal - discount + deliveryFee + serviceFee : 0;
-
+  /**
+   * SECURE CHECKOUT FLOW:
+   * 1. Client sends ONLY { foodId, quantity } to Cloud Function
+   * 2. Server looks up real prices from database
+   * 3. Server calculates fees, discounts, and total
+   * 4. Server creates the order document
+   *
+   * This prevents any client-side price manipulation.
+   */
   const handleCheckout = async () => {
     if (cartItems.length === 0) return;
 
@@ -48,31 +58,25 @@ export default function Cart() {
 
     setCheckingOut(true);
     try {
-      const order = {
-        userId: user.uid,
+      // Send ONLY item references to the server — NO prices from client
+      const result = await placeOrder({
         items: cartItems.map((item) => ({
-          id: item.id,
-          name: item.name,
-          desc: item.desc,
-          price: item.price,
-          imageUrl: item.imageUrl,
+          foodId: item.id,
           quantity: item.quantity,
         })),
-        subtotal: cartTotal,
-        discount,
-        deliveryFee,
-        serviceFee,
-        totalAmount,
-        status: "placed",
-        createdAt: serverTimestamp(),
-      };
+      });
 
-      await addDoc(collection(db, "orders"), order);
-      clearCart();
-      setShowSuccessModal(true);
-    } catch (error) {
+      if (result.success) {
+        clearCart();
+        setShowSuccessModal(true);
+      } else {
+        Alert.alert("Error", result.message || "Failed to place order.");
+      }
+    } catch (error: any) {
       console.error("Checkout error:", error);
-      Alert.alert("Error", "Failed to place order. Please try again.");
+      const errorMessage =
+        error?.message || "Failed to place order. Please try again.";
+      Alert.alert("Error", errorMessage);
     } finally {
       setCheckingOut(false);
     }
@@ -140,9 +144,10 @@ export default function Cart() {
               </View>
             ))}
 
-            {/* Payment Summary */}
+            {/* Payment Summary (estimated — actual is calculated server-side) */}
             <View style={styles.summaryContainer}>
               <Text style={styles.summaryTitle}>Payment summary</Text>
+              <Text style={styles.estimateNote}>* Final amount calculated at checkout</Text>
 
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Subtotal</Text>
@@ -152,23 +157,23 @@ export default function Cart() {
               <View style={styles.summaryRow}>
                 <Text style={[styles.summaryLabel, { color: COLORS.primary }]}>Discount</Text>
                 <Text style={[styles.summaryValue, { color: COLORS.primary }]}>
-                  - AED {discount.toFixed(2)}
+                  - AED {estimatedDiscount.toFixed(2)}
                 </Text>
               </View>
 
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Delivery fee</Text>
-                <Text style={styles.summaryValue}>AED {deliveryFee.toFixed(2)}</Text>
+                <Text style={styles.summaryValue}>AED {estimatedDeliveryFee.toFixed(2)}</Text>
               </View>
 
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Service fee</Text>
-                <Text style={styles.summaryValue}>AED {serviceFee.toFixed(2)}</Text>
+                <Text style={styles.summaryValue}>AED {estimatedServiceFee.toFixed(2)}</Text>
               </View>
 
               <View style={[styles.summaryRow, { marginTop: 10 }]}>
-                <Text style={styles.totalLabel}>Total amount</Text>
-                <Text style={styles.totalValue}>AED {totalAmount.toFixed(2)}</Text>
+                <Text style={styles.totalLabel}>Estimated total</Text>
+                <Text style={styles.totalValue}>AED {estimatedTotal.toFixed(2)}</Text>
               </View>
             </View>
 
@@ -255,7 +260,8 @@ const styles = StyleSheet.create({
 
   // Summary
   summaryContainer: { marginTop: 30 },
-  summaryTitle: { fontSize: 22, fontWeight: "800", color: COLORS.textPrimary, marginBottom: 20 },
+  summaryTitle: { fontSize: 22, fontWeight: "800", color: COLORS.textPrimary, marginBottom: 8 },
+  estimateNote: { fontSize: 12, color: COLORS.textSecondary, fontStyle: "italic", marginBottom: 16 },
   summaryRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 12 },
   summaryLabel: { fontSize: 15, color: "#555", fontWeight: "500" },
   summaryValue: { fontSize: 15, color: "#333", fontWeight: "600" },
