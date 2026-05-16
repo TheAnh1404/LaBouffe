@@ -17,15 +17,7 @@ import { router } from "expo-router";
 
 const { width } = Dimensions.get("window");
 
-// --- MÀU SẮC CHỦ ĐẠO ---
-const COLORS = {
-  primary: "#FF6332",
-  secondary: "#FFB01D",
-  background: "#FFFFFF",
-  grayText: "#888888",
-  blackText: "#333333",
-  cardBg: "#FFFFFF",
-};
+import { COLORS } from "../../constants/theme";
 
 export default function Home() {
   const { data: categories, loading: catLoading } = useFirestoreCollection<any>("categories");
@@ -176,7 +168,7 @@ const styles = StyleSheet.create({
 
   // Restaurants
   sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", marginTop: 25 },
-  sectionTitle: { fontSize: 20, fontWeight: "800", color: COLORS.blackText },
+  sectionTitle: { fontSize: 20, fontWeight: "800", color: COLORS.textPrimary },
   restaurantList: { marginTop: 15 },
   resCard: { 
     width: width * 0.7, marginRight: 15, 

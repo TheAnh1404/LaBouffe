@@ -7,21 +7,23 @@ import {
   TouchableOpacity,
   Image,
   SafeAreaView,
-  Alert
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons, AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../context/AuthContext";
 import { router } from "expo-router";
-
-const COLORS = {
-  primary: "#FF6332",
-  textMain: "#333333",
-  textSecondary: "#888888",
-  bg: "#FFFFFF",
-};
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../../config/firebase";
+import { COLORS } from "../../constants/theme";
+import SuccessModal from "../../components/SuccessModal";
 
 export default function Cart() {
   const { cartItems, updateQuantity, cartTotal, clearCart } = useCart();
+  const { user, isAuthenticated } = useAuth();
+  const [checkingOut, setCheckingOut] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const discount = cartItems.length > 0 ? 5 : 0;
   const deliveryFee = cartItems.length > 0 ? 2 : 0;
@@ -29,12 +31,51 @@ export default function Cart() {
 
   const totalAmount = cartTotal > 0 ? cartTotal - discount + deliveryFee + serviceFee : 0;
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (cartItems.length === 0) return;
-    // Tạm thời Clear Cart cho Checkout - Phần push DB Order có thể đặt ở hàm riêng
-    Alert.alert("Order Placed", "Your order has been placed successfully!", [
-      { text: "OK", onPress: () => clearCart() }
-    ]);
+
+    if (!isAuthenticated || !user) {
+      Alert.alert(
+        "Login Required",
+        "You need to login to place an order.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Login", onPress: () => router.push("/(auth)/login") },
+        ]
+      );
+      return;
+    }
+
+    setCheckingOut(true);
+    try {
+      const order = {
+        userId: user.uid,
+        items: cartItems.map((item) => ({
+          id: item.id,
+          name: item.name,
+          desc: item.desc,
+          price: item.price,
+          imageUrl: item.imageUrl,
+          quantity: item.quantity,
+        })),
+        subtotal: cartTotal,
+        discount,
+        deliveryFee,
+        serviceFee,
+        totalAmount,
+        status: "placed",
+        createdAt: serverTimestamp(),
+      };
+
+      await addDoc(collection(db, "orders"), order);
+      clearCart();
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error("Checkout error:", error);
+      Alert.alert("Error", "Failed to place order. Please try again.");
+    } finally {
+      setCheckingOut(false);
+    }
   };
 
   return (
@@ -42,16 +83,20 @@ export default function Cart() {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Cart <MaterialCommunityIcons name="cart-outline" size={28} color={COLORS.textMain} /></Text>
+          <Text style={styles.headerTitle}>
+            Cart <MaterialCommunityIcons name="cart-outline" size={28} color={COLORS.textPrimary} />
+          </Text>
         </View>
 
         {cartItems.length === 0 ? (
-          <View style={{flex: 1, justifyContent: "center", alignItems: "center"}}>
+          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
             <Ionicons name="cart-outline" size={80} color="#DDD" />
-            <Text style={{marginTop: 20, fontSize: 18, color: "#888"}}>Your cart is empty</Text>
-            <TouchableOpacity 
-              style={[styles.checkoutBtn, {width: 200, marginTop: 30}]} 
-              onPress={() => router.push('/menu')}
+            <Text style={{ marginTop: 20, fontSize: 18, color: COLORS.textSecondary }}>
+              Your cart is empty
+            </Text>
+            <TouchableOpacity
+              style={[styles.checkoutBtn, { width: 200, marginTop: 30 }]}
+              onPress={() => router.push("/menu")}
             >
               <Text style={styles.checkoutText}>Go to Menu</Text>
             </TouchableOpacity>
@@ -64,16 +109,22 @@ export default function Cart() {
                 <TouchableOpacity style={styles.heartIcon}>
                   <Ionicons name="heart-outline" size={16} color={COLORS.primary} />
                 </TouchableOpacity>
-                
-                <Image source={item.imageUrl ? { uri: item.imageUrl } : require("../../assets/images/f1.png")} style={styles.itemImage} resizeMode="contain" />
+
+                <Image
+                  source={item.imageUrl ? { uri: item.imageUrl } : require("../../assets/images/f1.png")}
+                  style={styles.itemImage}
+                  resizeMode="contain"
+                />
 
                 <View style={styles.infoContainer}>
                   <Text style={styles.itemName}>{item.name}</Text>
-                  <Text style={styles.itemDesc} numberOfLines={1}>{item.desc}</Text>
-                  
+                  <Text style={styles.itemDesc} numberOfLines={1}>
+                    {item.desc}
+                  </Text>
+
                   <View style={styles.priceRow}>
                     <Text style={styles.itemPrice}>AED {item.price}</Text>
-                    
+
                     {/* Quantity Selector */}
                     <View style={styles.quantityContainer}>
                       <TouchableOpacity style={styles.qtyBtn} onPress={() => updateQuantity(item.id, -1)}>
@@ -92,15 +143,17 @@ export default function Cart() {
             {/* Payment Summary */}
             <View style={styles.summaryContainer}>
               <Text style={styles.summaryTitle}>Payment summary</Text>
-              
+
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Subtotal</Text>
                 <Text style={styles.summaryValue}>AED {cartTotal.toFixed(2)}</Text>
               </View>
 
               <View style={styles.summaryRow}>
-                <Text style={[styles.summaryLabel, {color: COLORS.primary}]}>Discount</Text>
-                <Text style={[styles.summaryValue, {color: COLORS.primary}]}>- AED {discount.toFixed(2)}</Text>
+                <Text style={[styles.summaryLabel, { color: COLORS.primary }]}>Discount</Text>
+                <Text style={[styles.summaryValue, { color: COLORS.primary }]}>
+                  - AED {discount.toFixed(2)}
+                </Text>
               </View>
 
               <View style={styles.summaryRow}>
@@ -113,7 +166,7 @@ export default function Cart() {
                 <Text style={styles.summaryValue}>AED {serviceFee.toFixed(2)}</Text>
               </View>
 
-              <View style={[styles.summaryRow, {marginTop: 10}]}>
+              <View style={[styles.summaryRow, { marginTop: 10 }]}>
                 <Text style={styles.totalLabel}>Total amount</Text>
                 <Text style={styles.totalValue}>AED {totalAmount.toFixed(2)}</Text>
               </View>
@@ -121,37 +174,56 @@ export default function Cart() {
 
             {/* Bottom Buttons */}
             <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.addItemsBtn} onPress={() => router.push('/menu')}>
+              <TouchableOpacity style={styles.addItemsBtn} onPress={() => router.push("/menu")}>
                 <Text style={styles.addItemsText}>Add items</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.checkoutBtn} onPress={handleCheckout}>
-                <Text style={styles.checkoutText}>Checkout</Text>
+              <TouchableOpacity
+                style={[styles.checkoutBtn, checkingOut && { opacity: 0.7 }]}
+                onPress={handleCheckout}
+                disabled={checkingOut}
+              >
+                {checkingOut ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <Text style={styles.checkoutText}>Checkout</Text>
+                )}
               </TouchableOpacity>
             </View>
           </ScrollView>
         )}
       </View>
+
+      {/* Success Modal */}
+      <SuccessModal
+        visible={showSuccessModal}
+        message="Order Placed Successfully!"
+        buttonText="View Orders"
+        onPress={() => {
+          setShowSuccessModal(false);
+          router.push("/(tabs)/profile");
+        }}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: COLORS.bg },
+  safeArea: { flex: 1, backgroundColor: COLORS.background },
   container: { flex: 1, paddingHorizontal: 20 },
   header: { marginTop: 20, marginBottom: 30 },
-  headerTitle: { fontSize: 32, fontWeight: "800", color: COLORS.textMain },
-  
+  headerTitle: { fontSize: 32, fontWeight: "800", color: COLORS.textPrimary },
+
   // Cart Card
   cartCard: {
     flexDirection: "row",
-    backgroundColor: "#FFF",
+    backgroundColor: COLORS.white,
     borderRadius: 15,
     padding: 15,
     marginBottom: 20,
     alignItems: "center",
     elevation: 4,
-    shadowColor: "#000",
+    shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 10,
@@ -159,42 +231,61 @@ const styles = StyleSheet.create({
   heartIcon: { position: "absolute", top: 12, left: 12 },
   itemImage: { width: 80, height: 80, borderRadius: 10 },
   infoContainer: { flex: 1, marginLeft: 15 },
-  itemName: { fontSize: 16, fontWeight: "700", color: COLORS.textMain },
+  itemName: { fontSize: 16, fontWeight: "700", color: COLORS.textPrimary },
   itemDesc: { fontSize: 12, color: COLORS.textSecondary, marginVertical: 2 },
-  priceRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8 },
-  itemPrice: { fontSize: 16, fontWeight: "800", color: COLORS.textMain },
-  
+  priceRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 8,
+  },
+  itemPrice: { fontSize: 16, fontWeight: "800", color: COLORS.textPrimary },
+
   // Quantity Buttons
   quantityContainer: { flexDirection: "row", alignItems: "center" },
-  qtyBtn: { 
-    backgroundColor: COLORS.primary, 
-    width: 28, height: 20, 
-    borderRadius: 4, 
-    justifyContent: "center", alignItems: "center" 
+  qtyBtn: {
+    backgroundColor: COLORS.primary,
+    width: 28,
+    height: 20,
+    borderRadius: 4,
+    justifyContent: "center",
+    alignItems: "center",
   },
   qtyText: { marginHorizontal: 12, fontSize: 16, fontWeight: "700" },
 
   // Summary
   summaryContainer: { marginTop: 30 },
-  summaryTitle: { fontSize: 22, fontWeight: "800", color: COLORS.textMain, marginBottom: 20 },
+  summaryTitle: { fontSize: 22, fontWeight: "800", color: COLORS.textPrimary, marginBottom: 20 },
   summaryRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 12 },
   summaryLabel: { fontSize: 15, color: "#555", fontWeight: "500" },
   summaryValue: { fontSize: 15, color: "#333", fontWeight: "600" },
-  totalLabel: { fontSize: 18, fontWeight: "600", color: COLORS.textMain },
-  totalValue: { fontSize: 18, fontWeight: "800", color: COLORS.textMain },
+  totalLabel: { fontSize: 18, fontWeight: "600", color: COLORS.textPrimary },
+  totalValue: { fontSize: 18, fontWeight: "800", color: COLORS.textPrimary },
 
   // Buttons Row
-  buttonRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 40, marginBottom: 20 },
-  addItemsBtn: { 
-    width: "46%", height: 55, 
-    borderRadius: 12, borderWidth: 1, borderColor: COLORS.primary,
-    justifyContent: "center", alignItems: "center" 
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 40,
+    marginBottom: 20,
+  },
+  addItemsBtn: {
+    width: "46%",
+    height: 55,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    justifyContent: "center",
+    alignItems: "center",
   },
   addItemsText: { color: COLORS.primary, fontSize: 16, fontWeight: "700" },
-  checkoutBtn: { 
-    width: "46%", height: 55, 
-    borderRadius: 12, backgroundColor: COLORS.primary,
-    justifyContent: "center", alignItems: "center" 
+  checkoutBtn: {
+    width: "46%",
+    height: 55,
+    borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    justifyContent: "center",
+    alignItems: "center",
   },
   checkoutText: { color: "#FFF", fontSize: 16, fontWeight: "700" },
 });

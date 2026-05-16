@@ -1,19 +1,31 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   SafeAreaView,
   ActivityIndicator
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 import { useFirestoreCollection } from "../../hooks/useFirestoreData";
+import { COLORS } from "../../constants/theme";
+import RestaurantCard from "../../components/RestaurantCard";
+import SearchBar from "../../components/SearchBar";
 
 export default function RestaurantList() {
   const { data: restaurants, loading } = useFirestoreCollection<any>("restaurants");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Filter restaurants by search
+  const filteredRestaurants = searchQuery.trim()
+    ? restaurants.filter(
+        (r: any) =>
+          r.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          r.desc?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : restaurants;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -24,61 +36,54 @@ export default function RestaurantList() {
         </TouchableOpacity>
 
         {loading ? (
-          <ActivityIndicator size="large" color="#FF6332" style={{ marginTop: 50 }} />
+          <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 50 }} />
         ) : (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 100}}>
             {/* Filter Row */}
             <View style={styles.filterRow}>
               <TouchableOpacity style={styles.filterBox}>
-                <Feather name="sliders" size={18} color="#888" />
+                <Feather name="sliders" size={18} color={COLORS.textSecondary} />
                 <Text style={styles.filterText}>Filters</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.filterBox}>
-                <MaterialCommunityIcons name="silverware-fork-knife" size={18} color="#888" />
+                <MaterialCommunityIcons name="silverware-fork-knife" size={18} color={COLORS.textSecondary} />
                 <Text style={styles.filterText}>Cuisines</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.filterBox}>
-                <Feather name="search" size={18} color="#888" />
+                <Feather name="search" size={18} color={COLORS.textSecondary} />
                 <Text style={styles.filterText}>Search</Text>
               </TouchableOpacity>
+            </View>
+
+            {/* Search Bar */}
+            <View style={{ marginBottom: 20 }}>
+              <SearchBar
+                placeholder="Search restaurants..."
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
             </View>
 
             {/* Section Title */}
             <View style={styles.titleRow}>
               <Text style={styles.title}>All restaurants</Text>
-              <MaterialCommunityIcons name="food-outline" size={24} color="#FF6332" />
+              <MaterialCommunityIcons name="food-outline" size={24} color={COLORS.primary} />
             </View>
 
             {/* List of Restaurants */}
-            {restaurants.map((item) => (
-              <TouchableOpacity key={item.id} style={styles.card} activeOpacity={0.9}>
-                <Image source={item.imageUrl ? { uri: item.imageUrl } : require("../../assets/images/res_alhalbi.png")} style={styles.resImage} />
-
-                <View style={styles.infoContainer}>
-                  <Text style={styles.resName}>{item.name}</Text>
-                  <Text style={styles.resDesc}>{item.desc}</Text>
-
-                  <View style={styles.metaRow}>
-                    <Ionicons name="star" size={14} color="#FF6332" />
-                    <Text style={styles.ratingText}>{item.rating}</Text>
-                  </View>
-
-                  <View style={styles.metaRow}>
-                    <Feather name="clock" size={12} color="#AAA" />
-                    <Text style={styles.metaText}>{item.time}</Text>
-                    <View style={styles.dotSeparator} />
-                    <MaterialCommunityIcons name="moped" size={16} color="#555" />
-                    <Text style={styles.metaText}>{item.price || "Free"}</Text>
-                  </View>
-                </View>
-
-                <TouchableOpacity style={styles.heartIcon}>
-                  <Ionicons name="heart-outline" size={20} color="#FF6332" />
-                </TouchableOpacity>
-              </TouchableOpacity>
-            ))}
+            {filteredRestaurants.length > 0 ? (
+              filteredRestaurants.map((item: any) => (
+                <RestaurantCard key={item.id} restaurant={item} />
+              ))
+            ) : (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>
+                  {searchQuery ? `No results for "${searchQuery}"` : "No restaurants found"}
+                </Text>
+              </View>
+            )}
           </ScrollView>
         )}
       </View>
@@ -89,7 +94,7 @@ export default function RestaurantList() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.background,
   },
   container: {
     flex: 1,
@@ -102,29 +107,28 @@ const styles = StyleSheet.create({
   filterRow: {
     flexDirection: "row",
     gap: 10,
-    marginBottom: 25,
+    marginBottom: 20,
   },
   filterBox: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFF",
+    backgroundColor: COLORS.white,
     paddingVertical: 12,
     borderRadius: 10,
-    // Shadow tinh tế cho Filter
     elevation: 3,
-    shadowColor: "#000",
+    shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 5,
     borderWidth: 1,
-    borderColor: "#F2F2F2",
+    borderColor: COLORS.border,
   },
   filterText: {
     marginLeft: 8,
     fontSize: 14,
-    color: "#888",
+    color: COLORS.textSecondary,
     fontWeight: "500",
   },
   titleRow: {
@@ -136,66 +140,15 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "800",
-    color: "#333",
+    color: COLORS.textPrimary,
   },
-  card: {
-    flexDirection: "row",
-    backgroundColor: "#FFF",
-    borderRadius: 15,
-    padding: 12,
-    marginBottom: 15,
+  emptyContainer: {
+    paddingVertical: 40,
     alignItems: "center",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
   },
-  resImage: {
-    width: 85,
-    height: 85,
-    borderRadius: 12,
-  },
-  infoContainer: {
-    flex: 1,
-    marginLeft: 15,
-  },
-  resName: {
-    fontSize: 17,
-    fontWeight: "800",
-    color: "#444",
-  },
-  resDesc: {
-    fontSize: 12,
-    color: "#999",
-    marginVertical: 3,
-  },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 2,
-  },
-  ratingText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#666",
-    marginLeft: 4,
-  },
-  metaText: {
-    fontSize: 12,
-    color: "#777",
-    marginLeft: 4,
-  },
-  dotSeparator: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: "#DDD",
-    marginHorizontal: 8,
-  },
-  heartIcon: {
-    position: "absolute",
-    top: 15,
-    right: 15,
+  emptyText: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    fontWeight: "500",
   },
 });

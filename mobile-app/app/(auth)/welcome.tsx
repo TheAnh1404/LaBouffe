@@ -5,13 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
 
-const COLORS = {
-  primary: '#FF6332', // Orange from the design
-  secondary: '#34A853', // Green button 
-  bg: '#FFFFFF',
-  textMain: '#333333',
-  textSub: '#888888',
-};
+import { COLORS } from "../../constants/theme";
 
 export default function Welcome() {
   return (
@@ -93,7 +87,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   bottomCard: {
-    backgroundColor: COLORS.bg,
+    backgroundColor: COLORS.background,
     borderTopLeftRadius: 35,
     borderTopRightRadius: 35,
     paddingHorizontal: 25,
@@ -121,7 +115,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   loginBtn: {
-    backgroundColor: COLORS.secondary, // Xanh lá theo design
+    backgroundColor: COLORS.success, // Xanh lá theo design
     width: '100%',
     height: 60,
     borderRadius: 30,
@@ -140,7 +134,7 @@ const styles = StyleSheet.create({
   },
   connectText: {
     fontSize: 14,
-    color: COLORS.textSub,
+    color: COLORS.textSecondary,
     marginBottom: 20,
   },
   socialRow: {

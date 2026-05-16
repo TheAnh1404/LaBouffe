@@ -14,12 +14,7 @@ import { auth, db } from "../../config/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 
-const COLORS = {
-  primary: "#FF6332",
-  textMain: "#333333",
-  textSecondary: "#888888",
-  bg: "#FFFFFF",
-};
+import { COLORS } from "../../constants/theme";
 
 export default function Profile() {
   const [userName, setUserName] = useState("Guest");
@@ -54,12 +49,12 @@ export default function Profile() {
   }, []);
 
   const menuItems = [
-    { id: 1, name: "Wallet", icon: "wallet-outline", library: Ionicons },
-    { id: 2, name: "Order", icon: "format-list-bulleted", library: MaterialCommunityIcons },
-    { id: 3, name: "Favourite", icon: "bookmark-outline", library: Ionicons },
-    { id: 4, name: "Track", icon: "file-clock-outline", library: MaterialCommunityIcons },
-    { id: 5, name: "Get Help", icon: "help-circle-outline", library: MaterialCommunityIcons },
-    { id: 6, name: "About", icon: "information-outline", library: MaterialCommunityIcons },
+    { id: 1, name: "Wallet", icon: "wallet-outline", library: Ionicons, route: null },
+    { id: 2, name: "Order", icon: "format-list-bulleted", library: MaterialCommunityIcons, route: "/order-history" },
+    { id: 3, name: "Favourite", icon: "bookmark-outline", library: Ionicons, route: null },
+    { id: 4, name: "Track", icon: "file-clock-outline", library: MaterialCommunityIcons, route: null },
+    { id: 5, name: "Get Help", icon: "help-circle-outline", library: MaterialCommunityIcons, route: null },
+    { id: 6, name: "About", icon: "information-outline", library: MaterialCommunityIcons, route: null },
   ];
 
   return (
@@ -111,7 +106,12 @@ export default function Profile() {
           {menuItems.map((item) => {
             const IconLib = item.library;
             return (
-              <TouchableOpacity key={item.id} style={styles.gridItem} activeOpacity={0.8}>
+              <TouchableOpacity 
+                key={item.id} 
+                style={styles.gridItem} 
+                activeOpacity={0.8}
+                onPress={() => item.route && router.push(item.route as any)}
+              >
                 <IconLib name={item.icon as any} size={48} color="#FFF" />
                 <Text style={styles.gridText}>{item.name}</Text>
               </TouchableOpacity>
@@ -140,7 +140,7 @@ export default function Profile() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: COLORS.background,
   },
   headerContainer: {
     paddingHorizontal: 20,
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   largeTitle: {
     fontSize: 34,
     fontWeight: "900",
-    color: COLORS.textMain,
+    color: COLORS.textPrimary,
     letterSpacing: -0.5,
   },
   userInfoSection: {
