@@ -6,5 +6,6 @@
  */
 
 export { processOrder } from "./orders/processOrder";
+export { cancelOrder } from "./orders/cancelOrder";
 export { onOrderStatusChange } from "./orders/onOrderStatusChange";
 export { onUserCreate } from "./users/onUserCreate";

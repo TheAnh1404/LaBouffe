@@ -30,6 +30,12 @@ export interface Order {
   deliveryAddress?: string;
   /** Optional notes from customer */
   note?: string;
+  /** Idempotency key to prevent duplicate orders */
+  idempotencyKey?: string;
+  /** Reason for cancellation (if cancelled) */
+  cancellationReason?: string;
+  /** Timestamp when order was cancelled */
+  cancelledAt?: any;
 }
 
 /**
@@ -42,6 +48,8 @@ export interface CreateOrderRequest {
     quantity: number;
   }>;
   note?: string;
+  /** Client-generated UUID to prevent duplicate orders on double-tap */
+  idempotencyKey?: string;
 }
 
 /**
@@ -52,4 +60,20 @@ export interface CreateOrderResponse {
   orderId: string;
   totalAmount: number;
   message?: string;
+}
+
+/**
+ * Payload sent to cancelOrder Cloud Function.
+ */
+export interface CancelOrderRequest {
+  orderId: string;
+  reason?: string;
+}
+
+/**
+ * Response from cancelOrder Cloud Function.
+ */
+export interface CancelOrderResponse {
+  success: boolean;
+  message: string;
 }

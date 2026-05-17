@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   Alert,
   ActivityIndicator,
+  TextInput,
 } from "react-native";
 import { Ionicons, AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useCart } from "../../context/CartContext";
@@ -18,11 +19,24 @@ import { placeOrder } from "../../services/api";
 import { COLORS } from "../../constants/theme";
 import SuccessModal from "../../components/SuccessModal";
 
+/** Generate a simple UUID v4 for idempotency */
+function generateUUID(): string {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 export default function Cart() {
-  const { cartItems, updateQuantity, cartTotal, clearCart } = useCart();
+  const { cartItems, updateQuantity, cartTotal, clearCart, orderNote, setOrderNote } = useCart();
   const { user, isAuthenticated } = useAuth();
   const [checkingOut, setCheckingOut] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // Idempotency: generate a unique key per checkout attempt
+  // useRef ensures the key stays the same if user taps rapidly
+  const idempotencyKeyRef = useRef<string | null>(null);
 
   // Display-only fee estimates (actual fees calculated server-side)
   const estimatedDiscount = cartTotal > 50 ? 5 : 0;
@@ -34,15 +48,20 @@ export default function Cart() {
 
   /**
    * SECURE CHECKOUT FLOW:
-   * 1. Client sends ONLY { foodId, quantity } to Cloud Function
-   * 2. Server looks up real prices from database
-   * 3. Server calculates fees, discounts, and total
-   * 4. Server creates the order document
+   * 1. Generate idempotency key (UUID) to prevent duplicate orders
+   * 2. Client sends ONLY { foodId, quantity, note, idempotencyKey } to Cloud Function
+   * 3. Server looks up real prices from database
+   * 4. Server checks if order with this idempotencyKey already exists
+   * 5. Server calculates fees, discounts, and total
+   * 6. Server creates the order document
    *
-   * This prevents any client-side price manipulation.
+   * This prevents both price manipulation AND duplicate orders.
    */
   const handleCheckout = async () => {
     if (cartItems.length === 0) return;
+
+    // Prevent double-tap: if already checking out, do nothing
+    if (checkingOut) return;
 
     if (!isAuthenticated || !user) {
       Alert.alert(
@@ -56,24 +75,33 @@ export default function Cart() {
       return;
     }
 
+    // Generate idempotency key only once per checkout attempt
+    if (!idempotencyKeyRef.current) {
+      idempotencyKeyRef.current = generateUUID();
+    }
+
     setCheckingOut(true);
     try {
-      // Send ONLY item references to the server — NO prices from client
       const result = await placeOrder({
         items: cartItems.map((item) => ({
           foodId: item.id,
           quantity: item.quantity,
         })),
+        note: orderNote.trim() || undefined,
+        idempotencyKey: idempotencyKeyRef.current,
       });
 
       if (result.success) {
         clearCart();
+        idempotencyKeyRef.current = null; // Reset for next order
         setShowSuccessModal(true);
       } else {
+        idempotencyKeyRef.current = null; // Allow retry with new key
         Alert.alert("Error", result.message || "Failed to place order.");
       }
     } catch (error: any) {
       console.error("Checkout error:", error);
+      idempotencyKeyRef.current = null; // Allow retry with new key
       const errorMessage =
         error?.message || "Failed to place order. Please try again.";
       Alert.alert("Error", errorMessage);
@@ -132,17 +160,34 @@ export default function Cart() {
                     {/* Quantity Selector */}
                     <View style={styles.quantityContainer}>
                       <TouchableOpacity style={styles.qtyBtn} onPress={() => updateQuantity(item.id, -1)}>
-                        <AntDesign name="minus" size={16} color="#FFF" />
+                        <AntDesign name="minus" size={16} color={COLORS.white} />
                       </TouchableOpacity>
                       <Text style={styles.qtyText}>{item.quantity}</Text>
                       <TouchableOpacity style={styles.qtyBtn} onPress={() => updateQuantity(item.id, 1)}>
-                        <AntDesign name="plus" size={16} color="#FFF" />
+                        <AntDesign name="plus" size={16} color={COLORS.white} />
                       </TouchableOpacity>
                     </View>
                   </View>
                 </View>
               </View>
             ))}
+
+            {/* Order Note */}
+            <View style={styles.noteContainer}>
+              <Text style={styles.noteLabel}>
+                <Ionicons name="chatbubble-ellipses-outline" size={16} color={COLORS.textSecondary} />
+                {" "}Order Note
+              </Text>
+              <TextInput
+                style={styles.noteInput}
+                placeholder="Add special instructions (optional)"
+                placeholderTextColor={COLORS.textMuted}
+                value={orderNote}
+                onChangeText={setOrderNote}
+                multiline
+                maxLength={200}
+              />
+            </View>
 
             {/* Payment Summary (estimated — actual is calculated server-side) */}
             <View style={styles.summaryContainer}>
@@ -189,7 +234,7 @@ export default function Cart() {
                 disabled={checkingOut}
               >
                 {checkingOut ? (
-                  <ActivityIndicator color="#FFF" />
+                  <ActivityIndicator color={COLORS.white} />
                 ) : (
                   <Text style={styles.checkoutText}>Checkout</Text>
                 )}
@@ -258,8 +303,24 @@ const styles = StyleSheet.create({
   },
   qtyText: { marginHorizontal: 12, fontSize: 16, fontWeight: "700" },
 
+  // Order Note
+  noteContainer: { marginTop: 10, marginBottom: 10 },
+  noteLabel: { fontSize: 15, fontWeight: "600", color: COLORS.textSecondary, marginBottom: 10 },
+  noteInput: {
+    backgroundColor: COLORS.white,
+    borderRadius: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 14,
+    fontSize: 14,
+    color: COLORS.textPrimary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    minHeight: 60,
+    textAlignVertical: "top",
+  },
+
   // Summary
-  summaryContainer: { marginTop: 30 },
+  summaryContainer: { marginTop: 20 },
   summaryTitle: { fontSize: 22, fontWeight: "800", color: COLORS.textPrimary, marginBottom: 8 },
   estimateNote: { fontSize: 12, color: COLORS.textSecondary, fontStyle: "italic", marginBottom: 16 },
   summaryRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 12 },

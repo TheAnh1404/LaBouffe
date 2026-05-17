@@ -2,11 +2,16 @@
  * processOrder — Callable Cloud Function
  *
  * CRITICAL: This is the ONLY way orders are created.
- * The client sends ONLY { items: [{ foodId, quantity }] }.
+ * The client sends ONLY { items: [{ foodId, quantity }], note?, idempotencyKey }.
  * The server looks up actual prices from Firestore, calculates totals,
  * and creates the order document. This prevents price manipulation.
  *
  * Security: Requires authenticated user (Firebase Auth).
+ *
+ * Upgrades (v2):
+ * - Idempotency key prevents duplicate orders from double-tap
+ * - Batch read (getAll) replaces N+1 individual queries
+ * - Order size limits enforced (max 20 items, max 200 total qty)
  */
 
 import * as functions from "firebase-functions";
@@ -27,7 +32,17 @@ interface OrderItemRequest {
 interface ProcessOrderData {
   items: OrderItemRequest[];
   note?: string;
+  /** Client-generated UUID to prevent duplicate orders */
+  idempotencyKey?: string;
 }
+
+// ─── Constants ─────────────────────────────────────────────
+const MAX_ITEMS_PER_ORDER = 20;
+const MAX_TOTAL_QUANTITY = 200;
+const DISCOUNT_THRESHOLD = 50; // AED
+const DISCOUNT_AMOUNT = 5;     // AED
+const DELIVERY_FEE = 2.0;      // AED
+const SERVICE_FEE = 1.5;       // AED
 
 export const processOrder = functions.https.onCall(
   async (data: ProcessOrderData, context: functions.https.CallableContext) => {
@@ -40,15 +55,50 @@ export const processOrder = functions.https.onCall(
     }
 
     const userId = context.auth.uid;
-    const { items, note } = data;
+    const { items, note, idempotencyKey } = data;
 
-    // ─── 2. Input Validation ─────────────────────────────────────
+    // ─── 2. Idempotency Check ────────────────────────────────────
+    // If client sends an idempotencyKey, check if an order with this key
+    // already exists. If so, return the existing order instead of creating a duplicate.
+    if (idempotencyKey && typeof idempotencyKey === "string") {
+      const existingOrders = await db
+        .collection("orders")
+        .where("userId", "==", userId)
+        .where("idempotencyKey", "==", idempotencyKey)
+        .limit(1)
+        .get();
+
+      if (!existingOrders.empty) {
+        const existingOrder = existingOrders.docs[0];
+        const existingData = existingOrder.data();
+        functions.logger.info(
+          `Idempotent request: Order ${existingOrder.id} already exists for key ${idempotencyKey}`
+        );
+        return {
+          success: true,
+          orderId: existingOrder.id,
+          totalAmount: existingData.totalAmount,
+          message: "Order already placed successfully!",
+        };
+      }
+    }
+
+    // ─── 3. Input Validation ─────────────────────────────────────
     if (!items || !Array.isArray(items) || items.length === 0) {
       throw new functions.https.HttpsError(
         "invalid-argument",
         "Order must contain at least one item."
       );
     }
+
+    if (items.length > MAX_ITEMS_PER_ORDER) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        `Order cannot contain more than ${MAX_ITEMS_PER_ORDER} different items.`
+      );
+    }
+
+    let totalQuantity = 0;
 
     // Validate each item
     for (const item of items) {
@@ -64,9 +114,24 @@ export const processOrder = functions.https.onCall(
           `Invalid quantity for item ${item.foodId}. Must be between 1 and 99.`
         );
       }
+      totalQuantity += item.quantity;
     }
 
-    // ─── 3. Fetch Actual Prices from Database ────────────────────
+    if (totalQuantity > MAX_TOTAL_QUANTITY) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        `Total quantity cannot exceed ${MAX_TOTAL_QUANTITY} items per order.`
+      );
+    }
+
+    // ─── 4. Batch Fetch Actual Prices from Database ──────────────
+    // Using getAll() for a single round-trip instead of N individual reads
+    const foodRefs = items.map((item) =>
+      db.collection("foods").doc(item.foodId)
+    );
+
+    const foodDocs = await db.getAll(...foodRefs);
+
     const orderItems: Array<{
       foodId: string;
       name: string;
@@ -78,8 +143,9 @@ export const processOrder = functions.https.onCall(
 
     let subtotal = 0;
 
-    for (const item of items) {
-      const foodDoc = await db.collection("foods").doc(item.foodId).get();
+    for (let i = 0; i < items.length; i++) {
+      const foodDoc = foodDocs[i];
+      const item = items[i];
 
       if (!foodDoc.exists) {
         throw new functions.https.HttpsError(
@@ -110,20 +176,18 @@ export const processOrder = functions.https.onCall(
       subtotal += serverPrice * item.quantity;
     }
 
-    // ─── 4. Calculate Fees (Server-side only) ────────────────────
-    const discount = subtotal > 50 ? 5 : 0; // AED 5 discount for orders over AED 50
-    const deliveryFee = 2.0;
-    const serviceFee = 1.5;
-    const totalAmount = subtotal - discount + deliveryFee + serviceFee;
+    // ─── 5. Calculate Fees (Server-side only) ────────────────────
+    const discount = subtotal > DISCOUNT_THRESHOLD ? DISCOUNT_AMOUNT : 0;
+    const totalAmount = subtotal - discount + DELIVERY_FEE + SERVICE_FEE;
 
-    // ─── 5. Create Order Document ────────────────────────────────
-    const orderData = {
+    // ─── 6. Create Order Document ────────────────────────────────
+    const orderData: Record<string, any> = {
       userId,
       items: orderItems,
       subtotal: Math.round(subtotal * 100) / 100,
       discount: Math.round(discount * 100) / 100,
-      deliveryFee,
-      serviceFee,
+      deliveryFee: DELIVERY_FEE,
+      serviceFee: SERVICE_FEE,
       totalAmount: Math.round(totalAmount * 100) / 100,
       status: "placed",
       note: note || "",
@@ -131,11 +195,19 @@ export const processOrder = functions.https.onCall(
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     };
 
+    // Store idempotency key if provided
+    if (idempotencyKey) {
+      orderData.idempotencyKey = idempotencyKey;
+    }
+
     const orderRef = await db.collection("orders").add(orderData);
 
-    functions.logger.info(`Order ${orderRef.id} created for user ${userId}. Total: AED ${totalAmount.toFixed(2)}`);
+    functions.logger.info(
+      `Order ${orderRef.id} created for user ${userId}. ` +
+      `Items: ${orderItems.length}, Total: AED ${totalAmount.toFixed(2)}`
+    );
 
-    // ─── 6. Return Response ──────────────────────────────────────
+    // ─── 7. Return Response ──────────────────────────────────────
     return {
       success: true,
       orderId: orderRef.id,

@@ -51,12 +51,12 @@ export default function Profile() {
   }, []);
 
   const menuItems = [
-    { id: 1, name: "Wallet", icon: "wallet-outline", library: Ionicons, route: null },
+    { id: 1, name: "Wallet", icon: "wallet-outline", library: Ionicons, route: "/wallet" },
     { id: 2, name: "Order", icon: "format-list-bulleted", library: MaterialCommunityIcons, route: "/order-history" },
-    { id: 3, name: "Favourite", icon: "bookmark-outline", library: Ionicons, route: null },
-    { id: 4, name: "Track", icon: "file-clock-outline", library: MaterialCommunityIcons, route: null },
-    { id: 5, name: "Get Help", icon: "help-circle-outline", library: MaterialCommunityIcons, route: null },
-    { id: 6, name: "About", icon: "information-outline", library: MaterialCommunityIcons, route: null },
+    { id: 3, name: "Favourite", icon: "bookmark-outline", library: Ionicons, route: "/favourite" },
+    { id: 4, name: "Track", icon: "file-clock-outline", library: MaterialCommunityIcons, route: "/track" },
+    { id: 5, name: "Get Help", icon: "help-circle-outline", library: MaterialCommunityIcons, route: "/get-help" },
+    { id: 6, name: "About", icon: "information-outline", library: MaterialCommunityIcons, route: "/about" },
   ];
 
   return (

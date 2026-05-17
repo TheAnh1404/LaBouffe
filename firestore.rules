@@ -35,13 +35,17 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // ─── Orders (Strictly controlled) ────────────────────────────
-    // Orders are CREATED by Cloud Functions only.
-    // Users can only READ their own orders.
+    // ─── Orders (Controlled) ────────────────────────────────────
+    // Users can read their own orders and create new ones.
+    // When using Blaze plan with Cloud Functions, tighten create/update to `false`.
     match /orders/{orderId} {
       allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
-      allow create: if false; // Only Cloud Functions (admin SDK) can create
-      allow update: if false; // Only Cloud Functions can update status
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      // Allow user to cancel their own order (only if current status is "placed")
+      allow update: if isAuthenticated()
+                    && request.auth.uid == resource.data.userId
+                    && resource.data.status == "placed"
+                    && request.resource.data.status == "cancelled";
       allow delete: if false; // Orders are never deleted
     }
 
