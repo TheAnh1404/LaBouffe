@@ -10,7 +10,7 @@ import { AuthProvider, useAuth } from '../context/AuthContext';
 import { FavoritesProvider } from '../context/FavoritesContext';
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  initialRouteName: '(tabs)',
 };
 
 /**

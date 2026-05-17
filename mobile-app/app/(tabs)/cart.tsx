@@ -94,7 +94,7 @@ export default function Cart() {
 
         {cartItems.length === 0 ? (
           <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-            <Ionicons name="cart-outline" size={80} color="#DDD" />
+            <Ionicons name="cart-outline" size={80} color={COLORS.dotInactive} />
             <Text style={{ marginTop: 20, fontSize: 18, color: COLORS.textSecondary }}>
               Your cart is empty
             </Text>
@@ -263,8 +263,8 @@ const styles = StyleSheet.create({
   summaryTitle: { fontSize: 22, fontWeight: "800", color: COLORS.textPrimary, marginBottom: 8 },
   estimateNote: { fontSize: 12, color: COLORS.textSecondary, fontStyle: "italic", marginBottom: 16 },
   summaryRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 12 },
-  summaryLabel: { fontSize: 15, color: "#555", fontWeight: "500" },
-  summaryValue: { fontSize: 15, color: "#333", fontWeight: "600" },
+  summaryLabel: { fontSize: 15, color: COLORS.textSecondary, fontWeight: "500" },
+  summaryValue: { fontSize: 15, color: COLORS.textPrimary, fontWeight: "600" },
   totalLabel: { fontSize: 18, fontWeight: "600", color: COLORS.textPrimary },
   totalValue: { fontSize: 18, fontWeight: "800", color: COLORS.textPrimary },
 
@@ -293,5 +293,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  checkoutText: { color: "#FFF", fontSize: 16, fontWeight: "700" },
+  checkoutText: { color: COLORS.white, fontSize: 16, fontWeight: "700" },
 });

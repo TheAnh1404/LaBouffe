@@ -25,14 +25,6 @@ export default function TabsLayout() {
         },
       }}
     >
-      {/* Ẩn index.tsx (WelcomeScreen) vì user đã authenticated rồi */}
-      <Tabs.Screen
-        name="index"
-        options={{
-          href: null, // Ẩn khỏi tab bar
-        }}
-      />
-
       {/* HOME - Tab chính */}
       <Tabs.Screen
         name="home"

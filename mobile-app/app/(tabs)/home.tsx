@@ -3,9 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   ScrollView,
-  Image,
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
@@ -14,15 +12,22 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useFirestoreCollection, usePopularFoods } from "../../hooks/useFirestoreData";
 import { router } from "expo-router";
+import { useCart } from "../../context/CartContext";
+import { useFavorites } from "../../context/FavoritesContext";
+
+import { COLORS, SHADOWS } from "../../constants/theme";
+import SearchBar from "../../components/SearchBar";
+import FoodCard from "../../components/FoodCard";
+import RestaurantCard from "../../components/RestaurantCard";
 
 const { width } = Dimensions.get("window");
-
-import { COLORS } from "../../constants/theme";
 
 export default function Home() {
   const { data: categories, loading: catLoading } = useFirestoreCollection<any>("categories");
   const { data: restaurants, loading: resLoading } = useFirestoreCollection<any>("restaurants");
   const { data: popularFoods, loading: popLoading } = usePopularFoods<any>();
+  const { addToCart } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   // Filter only home specific restaurants or just show a few
   const homeRestaurants = restaurants.filter(r => r.id.includes("res_home") || r.km).slice(0, 3);
@@ -42,14 +47,7 @@ export default function Home() {
             <View style={styles.activeDot} />
           </View>
           
-          <View style={styles.searchContainer}>
-            <Ionicons name="search-outline" size={20} color="#BBB" />
-            <TextInput 
-              placeholder="Search" 
-              style={styles.searchInput} 
-              placeholderTextColor="#BBB"
-            />
-          </View>
+          <SearchBar placeholder="Search" />
         </View>
 
         {isLoading ? (
@@ -61,7 +59,7 @@ export default function Home() {
               {categories.map((item, i) => (
                 <TouchableOpacity key={item.id} style={styles.categoryItem}>
                   <View style={styles.categoryIconBox}>
-                     <Image source={item.iconUrl ? { uri: item.iconUrl } : require("../../assets/images/dishes.png")} style={styles.categoryIconImg} />
+                     <Ionicons name="fast-food-outline" size={28} color={COLORS.primary} />
                   </View>
                   <Text style={styles.categoryLabel}>{item.name}</Text>
                 </TouchableOpacity>
@@ -74,19 +72,11 @@ export default function Home() {
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.restaurantList}>
               {homeRestaurants.length > 0 ? homeRestaurants.map((res) => (
-                <TouchableOpacity key={res.id} style={styles.resCard}>
-                  <Image source={res.imageUrl ? { uri: res.imageUrl } : require("../../assets/images/banner_bg.png")} style={styles.resImage} />
-                  <TouchableOpacity style={styles.heartIcon}>
-                     <Ionicons name="heart-outline" size={18} color={COLORS.primary} />
-                  </TouchableOpacity>
-                  <View style={styles.resInfoRow}>
-                    <Text style={styles.resInfoText}>Location: <Text style={{color: COLORS.primary}}>{res.km}</Text></Text>
-                    <Text style={styles.resInfoText}><Ionicons name="time-outline" size={12}/> {res.time}</Text>
-                    <Text style={styles.resInfoText}><Ionicons name="star" size={12} color={COLORS.secondary}/> {res.rating}</Text>
-                  </View>
-                </TouchableOpacity>
+                <View key={res.id} style={styles.resCardWrapper}>
+                  <RestaurantCard restaurant={res} />
+                </View>
               )) : (
-                <Text style={{color: "#999", paddingVertical: 20}}>No restaurants featured here yet.</Text>
+                <Text style={styles.emptyText}>No restaurants featured here yet.</Text>
               )}
             </ScrollView>
 
@@ -110,15 +100,22 @@ export default function Home() {
               <TouchableOpacity onPress={() => router.push('/menu')}><Text style={styles.seeAllText}>See all</Text></TouchableOpacity>
             </View>
 
-            <View style={styles.popularGrid}>
+            <View style={styles.popularList}>
               {popularFoods.map((food) => (
-                <View key={food.id} style={styles.foodCard}>
-                  <Image source={food.imageUrl ? { uri: food.imageUrl } : require("../../assets/images/f1.png")} style={styles.foodImg} />
-                  <View style={styles.ratingBadge}>
-                    <Ionicons name="star" size={12} color={COLORS.secondary} />
-                    <Text style={styles.ratingText}>{food.rating}</Text>
-                  </View>
-                </View>
+                <FoodCard
+                  key={food.id}
+                  food={food}
+                  onPress={() => router.push({ pathname: '/food-detail', params: { foodId: food.id } } as any)}
+                  onAddToCart={() => addToCart({
+                    id: food.id,
+                    name: food.name,
+                    desc: food.desc,
+                    price: food.price,
+                    imageUrl: food.imageUrl,
+                  })}
+                  isFavorite={isFavorite(food.id)}
+                  onFavorite={() => toggleFavorite(food.id)}
+                />
               ))}
             </View>
           </>
@@ -138,62 +135,44 @@ const styles = StyleSheet.create({
   // Header
   header: { marginTop: 10 },
   locationRow: { flexDirection: "row", alignItems: "center", marginBottom: 15 },
-  locationLabel: { fontSize: 16, fontWeight: "500", color: "#666", marginHorizontal: 5 },
+  locationLabel: { fontSize: 16, fontWeight: "500", color: COLORS.textSecondary, marginHorizontal: 5 },
   activeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.primary, marginLeft: 4 },
-  searchContainer: {
-    flexDirection: "row",
-    backgroundColor: "#FBFBFB",
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    height: 50,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#F0F0F0",
-  },
-  searchInput: { flex: 1, marginLeft: 10, fontSize: 16 },
 
   // Categories
   sectionMargin: { marginTop: 20 },
   categoryItem: { alignItems: "center", marginRight: 20 },
   categoryIconBox: {
     width: 65, height: 65,
-    backgroundColor: "#FFF",
+    backgroundColor: COLORS.white,
     borderRadius: 15,
     justifyContent: "center", alignItems: "center",
-    elevation: 4, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 10,
+    ...SHADOWS.card,
     marginBottom: 8,
   },
-  categoryIconImg: { width: 40, height: 40, resizeMode: "contain" },
-  categoryLabel: { fontSize: 13, color: "#666", fontWeight: "500" },
+  categoryLabel: { fontSize: 13, color: COLORS.textSecondary, fontWeight: "500" },
 
   // Restaurants
   sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", marginTop: 25 },
   sectionTitle: { fontSize: 20, fontWeight: "800", color: COLORS.textPrimary },
   restaurantList: { marginTop: 15 },
-  resCard: { 
-    width: width * 0.7, marginRight: 15, 
-    backgroundColor: "#FFF", borderRadius: 20,
-    elevation: 5, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 10,
-    overflow: "hidden", marginBottom: 10
+  resCardWrapper: { 
+    width: width * 0.75,
+    marginRight: 15,
   },
-  resImage: { width: "100%", height: 140 },
-  heartIcon: { position: "absolute", top: 10, right: 10, backgroundColor: "#FFF", padding: 6, borderRadius: 10 },
-  resInfoRow: { flexDirection: "row", justifyContent: "space-between", padding: 12 },
-  resInfoText: { fontSize: 11, color: "#888", fontWeight: "600" },
+  emptyText: { color: COLORS.textSecondary, paddingVertical: 20 },
 
   // Banner
   bannerContainer: {
-    backgroundColor: '#FF7D2C', // Màu nền cam tươi
-    borderRadius: 20, // Bo góc cho mềm mại
+    backgroundColor: COLORS.primary,
+    borderRadius: 20,
     marginTop: 25, 
     marginBottom: 15,
-    paddingVertical: 25, // Tăng khoảng trống bên trong
+    paddingVertical: 25,
     paddingHorizontal: 20,
-    alignItems: "center", // Trọng tâm căn giữa
+    alignItems: "center",
     justifyContent: "center",
-    // Đổ bóng cho Box thêm phần nổi bật
     elevation: 4, 
-    shadowColor: "#FF7D2C", 
+    shadowColor: COLORS.primary, 
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.35,
     shadowRadius: 10,
@@ -202,10 +181,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   bannerBadge: { 
-    color: "#FFF", 
+    color: COLORS.white, 
     fontWeight: "900", 
     fontSize: 16, 
-    letterSpacing: 1, // Kéo giãn text một xíu tạo cảm giác sang trọng
+    letterSpacing: 1,
     textTransform: "uppercase", 
     marginBottom: 8,
   },
@@ -214,50 +193,32 @@ const styles = StyleSheet.create({
     fontWeight: "400",
   },
   bannerDesc: { 
-    color: "#FFF", 
+    color: COLORS.white, 
     fontSize: 13, 
-    lineHeight: 22, // Tăng thêm khoảng cách dòng cho text dễ đọc
+    lineHeight: 22,
     textAlign: "center", 
     marginBottom: 18,
     fontWeight: "600",
     opacity: 0.95,
   },
   orderNowButton: {
-    backgroundColor: "#FFF", // Nút bấm màu trắng tương phản
+    backgroundColor: COLORS.white,
     paddingVertical: 12,
     paddingHorizontal: 30,
-    borderRadius: 30, // Chuyển thành dạng nút con nhộng (Pill button)
-    // Đổ bóng xíu cho cả nút nhấn
+    borderRadius: 30,
     elevation: 2,
-    shadowColor: "#000",
+    shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
   orderNowText: { 
-    color: "#FF7D2C", // Chữ bật màu cam giữa nền trắng
+    color: COLORS.primary,
     fontWeight: "800", 
     fontSize: 15,
   },
 
-  // Popular Grid
+  // Popular Section
   seeAllText: { color: COLORS.primary, fontWeight: "600" },
-  popularGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginTop: 15 },
-  foodCard: {
-    width: "31%", 
-    aspectRatio: 1,
-    backgroundColor: "#F9F9F9",
-    borderRadius: 15,
-    marginBottom: 15,
-    justifyContent: "center", alignItems: "center",
-    elevation: 2, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 5
-  },
-  foodImg: { width: "80%", height: "80%", resizeMode: "contain" },
-  ratingBadge: { 
-    position: "absolute", bottom: 8, left: 8, 
-    flexDirection: "row", alignItems: "center", 
-    backgroundColor: "rgba(255,255,255,0.9)",
-    paddingHorizontal: 5, borderRadius: 5
-  },
-  ratingText: { fontSize: 10, fontWeight: "bold", marginLeft: 2, color: "#444" },
+  popularList: { marginTop: 15 },
 });

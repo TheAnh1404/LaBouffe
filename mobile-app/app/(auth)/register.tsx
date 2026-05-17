@@ -86,7 +86,7 @@ export default function Register() {
       {/* Top Header Row with Back Button */}
       <View style={styles.topRow}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={28} color="#000" />
+          <Ionicons name="chevron-back" size={28} color={COLORS.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.topWelcomeText}>Welcome to La bouffe</Text>
         <View style={{ width: 28 }} /> {/* Placeholder to balance title */}
@@ -112,7 +112,7 @@ export default function Register() {
             <TextInput 
               placeholder="First name" 
               style={styles.input} 
-              placeholderTextColor="#AFAFAF" 
+              placeholderTextColor={COLORS.textMuted} 
               value={firstName}
               onChangeText={setFirstName}
             />
@@ -123,7 +123,7 @@ export default function Register() {
             <TextInput 
               placeholder="Last name" 
               style={styles.input} 
-              placeholderTextColor="#AFAFAF" 
+              placeholderTextColor={COLORS.textMuted} 
               value={lastName}
               onChangeText={setLastName}
             />
@@ -136,7 +136,7 @@ export default function Register() {
               style={styles.input} 
               keyboardType="email-address" 
               autoCapitalize="none"
-              placeholderTextColor="#AFAFAF" 
+              placeholderTextColor={COLORS.textMuted} 
               value={email}
               onChangeText={setEmail}
             />
@@ -148,7 +148,7 @@ export default function Register() {
               placeholder="Choose password" 
               style={styles.input} 
               secureTextEntry={!showPassword} 
-              placeholderTextColor="#AFAFAF"
+              placeholderTextColor={COLORS.textMuted}
               value={password}
               onChangeText={setPassword}
             />
@@ -162,7 +162,7 @@ export default function Register() {
             <MaterialCommunityIcons 
               name={agree ? "checkbox-marked" : "checkbox-blank-outline"} 
               size={24} 
-              color={agree ? COLORS.primary : "#AFAFAF"} 
+              color={agree ? COLORS.primary : COLORS.textMuted} 
             />
             <Text style={styles.checkboxText}>Yes, I agree to Terms & Conditions</Text>
           </TouchableOpacity>
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#E0E0E0",
+    backgroundColor: COLORS.dotInactive,
     marginHorizontal: 4,
   },
   activeDot: {
@@ -263,14 +263,14 @@ const styles = StyleSheet.create({
     height: 55,
     marginBottom: 18,
     // Shadow for iOS
-    shadowColor: "#000",
+    shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.04,
     shadowRadius: 10,
     // Shadow for Android
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#F9F9F9',
+    borderColor: COLORS.borderLight,
   },
   inputIcon: {
     marginRight: 15,
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   showText: {
-    color: "#CCC",
+    color: COLORS.disabled,
     fontWeight: "600",
     fontSize: 14,
   },
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
   submitButtonText: {
-    color: "#FFF",
+    color: COLORS.white,
     fontSize: 16,
     fontWeight: "bold",
   },

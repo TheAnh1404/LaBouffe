@@ -212,7 +212,7 @@ export default function ForgotPassword() {
                 <MaterialCommunityIcons
                   name="email-outline"
                   size={20}
-                  color={error ? "#E53935" : COLORS.primary}
+                  color={error ? COLORS.error : COLORS.primary}
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -241,7 +241,7 @@ export default function ForgotPassword() {
               {/* Error Message */}
               {error && (
                 <View style={styles.errorRow}>
-                  <Ionicons name="alert-circle" size={16} color="#E53935" />
+                  <Ionicons name="alert-circle" size={16} color={COLORS.error} />
                   <Text style={styles.errorText}>{error}</Text>
                 </View>
               )}
@@ -364,7 +364,7 @@ export default function ForgotPassword() {
         {/* Error after resend */}
         {error && (
           <View style={[styles.errorRow, { marginTop: 10 }]}>
-            <Ionicons name="alert-circle" size={16} color="#E53935" />
+            <Ionicons name="alert-circle" size={16} color={COLORS.error} />
             <Text style={styles.errorText}>{error}</Text>
           </View>
         )}
@@ -463,8 +463,8 @@ const styles = StyleSheet.create({
     borderColor: COLORS.borderLight,
   },
   inputError: {
-    borderColor: "#FFCDD2",
-    backgroundColor: "#FFF8F8",
+    borderColor: COLORS.errorLight,
+    backgroundColor: COLORS.errorBg,
   },
   inputIcon: {
     marginRight: 12,
@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 13,
-    color: "#E53935",
+    color: COLORS.error,
     fontWeight: "500",
     marginLeft: 6,
   },
@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0,
   },
   sendButtonText: {
-    color: "#FFF",
+    color: COLORS.white,
     fontSize: 16,
     fontWeight: "700",
     marginLeft: 8,
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
     marginRight: 14,
   },
   stepNumber: {
-    color: "#FFF",
+    color: COLORS.white,
     fontSize: 13,
     fontWeight: "800",
   },
@@ -647,7 +647,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   loginButtonText: {
-    color: "#FFF",
+    color: COLORS.white,
     fontSize: 16,
     fontWeight: "700",
     marginLeft: 8,

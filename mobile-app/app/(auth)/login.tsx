@@ -62,7 +62,7 @@ export default function Login() {
       {/* Top Header Row with Back Button */}
       <View style={styles.topRow}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={28} color="#000" />
+          <Ionicons name="chevron-back" size={28} color={COLORS.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.topWelcomeText}>Welcome to La bouffe</Text>
         <View style={{ width: 28 }} />
@@ -90,7 +90,7 @@ export default function Login() {
               style={styles.input} 
               keyboardType="email-address"
               autoCapitalize="none"
-              placeholderTextColor="#AFAFAF" 
+              placeholderTextColor={COLORS.textMuted} 
               value={email}
               onChangeText={setEmail}
             />
@@ -102,7 +102,7 @@ export default function Login() {
               placeholder="Password"
               style={styles.input}
               secureTextEntry={!showPassword}
-              placeholderTextColor="#AFAFAF"
+              placeholderTextColor={COLORS.textMuted}
               value={password}
               onChangeText={setPassword}
             />
@@ -155,11 +155,11 @@ export default function Login() {
         </View>
 
         {/* Bottom register link (Like screen 9) */}
-        <View style={{ flex: 1, justifyContent: 'flex-end', alignItems: 'center', marginTop: 50 }}>
-          <View style={{flexDirection: 'row'}}>
-             <Text style={{color: COLORS.textSecondary, fontSize: 13}}>Don't have an account? </Text>
+        <View style={styles.bottomRegister}>
+          <View style={styles.bottomRegisterRow}>
+             <Text style={styles.bottomRegisterText}>Don't have an account? </Text>
              <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-                 <Text style={{color: COLORS.primary, fontWeight: '700', fontSize: 13}}>Create an account</Text>
+                 <Text style={styles.bottomRegisterLink}>Create an account</Text>
              </TouchableOpacity>
           </View>
         </View>
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#E0E0E0",
+    backgroundColor: COLORS.dotInactive,
     marginHorizontal: 4,
   },
   activeDot: {
@@ -241,13 +241,13 @@ const styles = StyleSheet.create({
     height: 55,
     marginBottom: 15,
     // Shadow cho iOS & Android
-    shadowColor: "#000",
+    shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.04,
     shadowRadius: 10,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#F9F9F9',
+    borderColor: COLORS.borderLight,
   },
   inputIcon: {
     marginRight: 15,
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   showText: {
-    color: "#CCC",
+    color: COLORS.disabled,
     fontWeight: "600",
     fontSize: 14,
   },
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
   forgotText: {
-    color: '#B0B0B0',
+    color: COLORS.textMuted,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   loginButtonText: {
-    color: "#FFF",
+    color: COLORS.white,
     fontSize: 16,
     fontWeight: "bold",
   },
@@ -300,11 +300,11 @@ const styles = StyleSheet.create({
   line: {
     flex: 1,
     height: 1,
-    backgroundColor: "#EEEEEE",
+    backgroundColor: COLORS.borderMedium,
   },
   connectText: {
     marginHorizontal: 15,
-    color: "#AAA",
+    color: COLORS.textMuted,
     fontSize: 13,
     fontWeight: '500',
   },
@@ -317,8 +317,26 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: COLORS.surface,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  bottomRegister: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  bottomRegisterRow: {
+    flexDirection: 'row',
+  },
+  bottomRegisterText: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+  },
+  bottomRegisterLink: {
+    color: COLORS.primary,
+    fontWeight: '700',
+    fontSize: 13,
   },
 });

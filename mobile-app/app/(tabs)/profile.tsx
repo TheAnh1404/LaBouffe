@@ -68,11 +68,11 @@ export default function Profile() {
           {/* Hàng 1: Các nút chức năng điều hướng */}
           <View style={styles.navRow}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-              <Ionicons name="chevron-back" size={30} color="#000" />
+              <Ionicons name="chevron-back" size={30} color={COLORS.textPrimary} />
             </TouchableOpacity>
             
             <TouchableOpacity onPress={() => router.push('/seed' as any)}>
-              <Ionicons name="settings-outline" size={24} color="#666" />
+              <Ionicons name="settings-outline" size={24} color={COLORS.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -198,12 +198,12 @@ const styles = StyleSheet.create({
     padding: 5,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: "#FFF",
+    borderColor: COLORS.white,
   },
   userName: {
     fontSize: 24,
     fontWeight: "800",
-    color: "#333",
+    color: COLORS.textPrimary,
   },
   userPhone: {
     fontSize: 14,
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
   },
   gridText: {
-    color: "#FFF",
+    color: COLORS.white,
     fontSize: 18,
     fontWeight: "700",
     marginTop: 12,
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFEFEB',
+    backgroundColor: COLORS.primaryLight,
     marginHorizontal: 25,
     marginTop: 10,
     height: 60,
